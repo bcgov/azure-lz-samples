@@ -1,6 +1,6 @@
 # How to use this module
 
-## Preqrequisites
+## Prerequisites
 
 To use this module, it is required to have the following:
 
