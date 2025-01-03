@@ -1,10 +1,5 @@
 resource_group_name = "caf-ghr"
 location            = "Canada Central"
-tags = {
-  account_coding = "000000000000000000000000",
-  billing_group  = "LICENSE_PLATE", # License Plate
-  ministry_name  = "CITZ"
-}
 
 postfix = "ghr"
 

@@ -30,12 +30,6 @@ You must update the values in the `example.auto.tfvars` file.
 ```terraform
 resource_group_name = "cicd-self-hosted-agents"
 
-tags = {
-  account_coding = "000000000000000000000000",
-  billing_group  = "LICENSE_PLATE",
-  ministry_name  = "MINISTRY_NAME"
-}
-
 postfix = "cicd"
 
 version_control_system_type         = "github"
@@ -69,7 +63,7 @@ Please refer to the official [terraform-azurerm-avm-ptn-cicd-agents-and-runners]
 
 | Name | Version |
 |------|---------|
-| <a name="provider_azurerm"></a> [azurerm](#provider\_azurerm) | 3.117.0 |
+| <a name="provider_azurerm"></a> [azurerm](#provider\_azurerm) | ~> 3.113 |
 
 ## Modules
 
