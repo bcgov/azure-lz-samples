@@ -1,9 +1,9 @@
 variable "resource_providers" {
   description = "The list of required Azure Resource Providers to register"
-  type    = list(string)
+  type        = list(string)
   default = [
-    "Microsoft.CloudShell", 
-    "Microsoft.ContainerInstance", 
+    "Microsoft.CloudShell",
+    "Microsoft.ContainerInstance",
     "Microsoft.Relay"
   ]
 }
@@ -11,7 +11,7 @@ variable "resource_providers" {
 variable "tags" {
   description = "Tags to apply to all resources"
   type        = map(string)
-  default     = {
+  default = {
     "Environment" = "cloudshell"
   }
 }

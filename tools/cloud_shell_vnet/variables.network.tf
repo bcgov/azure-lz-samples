@@ -1,23 +1,23 @@
 variable "virtual_network_name" {
   description = "Name of the existing virtual network"
-  type        = string  
+  type        = string
 }
 
 variable "virtual_network_resource_group" {
   description = "Name of the resource group containing the virtual network"
-  type        = string   
+  type        = string
 }
 
 variable "containerSubnetName" {
   description = "Name of the subnet to use for Cloud Shell containers."
   type        = string
-  default     = "cloudshellsubnet"  
+  default     = "cloudshellsubnet"
 }
 
 variable "relaySubnetName" {
   description = "Name of the subnet to use for Azure Relay."
   type        = string
-  default     = "relaysubnet"  
+  default     = "relaysubnet"
 }
 
 variable "storageSubnetName" {
@@ -28,21 +28,21 @@ variable "storageSubnetName" {
 
 variable "containerSubnetAddressPrefix" {
   description = "Address prefix for the container subnet."
-  type        = string  
+  type        = string
 }
 
 variable "relaySubnetAddressPrefix" {
   description = "Address prefix for the relay subnet."
-  type        = string   
+  type        = string
 }
 
 variable "storageSubnetAddressPrefix" {
   description = "Address prefix for the storage subnet."
-  type        = string  
+  type        = string
 }
 
 variable "privateEndpointName" {
   description = "Name of Private Endpoint for Azure Relay."
   type        = string
-  default     = "cloudshellRelayEndpoint"  
+  default     = "cloudshellRelayEndpoint"
 }

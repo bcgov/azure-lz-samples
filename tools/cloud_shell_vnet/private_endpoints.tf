@@ -1,7 +1,7 @@
 resource "azurerm_private_endpoint" "example" {
-  depends_on = [ 
+  depends_on = [
     azapi_update_resource.relay_subnet,
-    azurerm_relay_namespace.cloudshell 
+    azurerm_relay_namespace.cloudshell
   ]
 
   name                = var.privateEndpointName
