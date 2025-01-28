@@ -3,11 +3,11 @@ output "virtualNetworkId" {
 }
 
 output "containerSubnetId" {
-  value = azapi_update_resource.container_subnet.id
+  value = azapi_resource.container_subnet.id
 }
 
 output "storageSubnetId" {
-  value = azapi_update_resource.storage_subnet.id
+  value = azapi_resource.storage_subnet.id
 }
 
 output "networkSecurityGroupResourceId" {

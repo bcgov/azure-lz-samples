@@ -12,12 +12,18 @@ resource "azurerm_storage_account" "cloudshell" {
     default_action = "Deny"
     bypass         = ["None"]
     virtual_network_subnet_ids = [
-      azapi_update_resource.container_subnet.id,
-      azapi_update_resource.storage_subnet.id
+      azapi_resource.container_subnet.id,
+      azapi_resource.storage_subnet.id
     ]
   }
   https_traffic_only_enabled = true
   min_tls_version            = "TLS1_2"
+
+  lifecycle {
+    ignore_changes = [
+      tags
+    ]
+  }
 }
 
 resource "azurerm_storage_share" "cloudshell_share" {

@@ -24,16 +24,15 @@ No modules.
 
 | Name | Type |
 |------|------|
-| [azapi_update_resource.container_subnet](https://registry.terraform.io/providers/Azure/azapi/latest/docs/resources/update_resource) | resource |
-| [azapi_update_resource.relay_subnet](https://registry.terraform.io/providers/Azure/azapi/latest/docs/resources/update_resource) | resource |
-| [azapi_update_resource.storage_subnet](https://registry.terraform.io/providers/Azure/azapi/latest/docs/resources/update_resource) | resource |
+| [azapi_resource.container_subnet](https://registry.terraform.io/providers/Azure/azapi/latest/docs/resources/resource) | resource |
+| [azapi_resource.relay_subnet](https://registry.terraform.io/providers/Azure/azapi/latest/docs/resources/resource) | resource |
+| [azapi_resource.storage_subnet](https://registry.terraform.io/providers/Azure/azapi/latest/docs/resources/resource) | resource |
 | [azurerm_network_profile.cloudshell](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/network_profile) | resource |
 | [azurerm_network_security_group.container_nsg](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/network_security_group) | resource |
 | [azurerm_network_security_group.relay_nsg](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/network_security_group) | resource |
 | [azurerm_network_security_group.storage_nsg](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/network_security_group) | resource |
 | [azurerm_private_endpoint.example](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/private_endpoint) | resource |
 | [azurerm_relay_namespace.cloudshell](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/relay_namespace) | resource |
-| [azurerm_resource_provider_registration.cloudshell_providers](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/resource_provider_registration) | resource |
 | [azurerm_role_assignment.network_profile](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/role_assignment) | resource |
 | [azurerm_role_assignment.relay_namespace](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/role_assignment) | resource |
 | [azurerm_storage_account.cloudshell](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/storage_account) | resource |

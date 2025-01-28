@@ -15,16 +15,34 @@ resource "azurerm_network_security_group" "container_nsg" {
     source_address_prefix      = var.containerSubnetAddressPrefix
     destination_address_prefix = var.containerSubnetAddressPrefix
   }
+
+  lifecycle {
+    ignore_changes = [
+      tags
+    ]
+  }
 }
 
 resource "azurerm_network_security_group" "relay_nsg" {
   name                = "private-cloudshell-relay"
   location            = data.azurerm_virtual_network.vnet.location
   resource_group_name = data.azurerm_virtual_network.vnet.resource_group_name
+
+  lifecycle {
+    ignore_changes = [
+      tags
+    ]
+  }
 }
 
 resource "azurerm_network_security_group" "storage_nsg" {
   name                = "private-cloudshell-storage"
   location            = data.azurerm_virtual_network.vnet.location
   resource_group_name = data.azurerm_virtual_network.vnet.resource_group_name
+
+  lifecycle {
+    ignore_changes = [
+      tags
+    ]
+  }
 }

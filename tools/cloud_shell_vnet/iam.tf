@@ -12,7 +12,8 @@ resource "azurerm_role_assignment" "relay_namespace" {
   depends_on = [azurerm_relay_namespace.cloudshell]
 
   # NOTE: Grants Contributor to the Azure Container Instance Service on the Relay Namespace
-  scope = azurerm_relay_namespace.cloudshell.id
+  # scope = azurerm_relay_namespace.cloudshell.id
+  scope = "Microsoft.Network/networkProfiles/${var.relayNamespaceName}"
   # role_definition_name = "Contributor"
   role_definition_id = local.contributorRoleDefinitionId
   principal_id       = local.azureContainerInstanceOID

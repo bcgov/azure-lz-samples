@@ -1,6 +1,4 @@
-resource "azapi_update_resource" "container_subnet" {
-  depends_on = [azurerm_resource_provider_registration.cloudshell_providers]
-
+resource "azapi_resource" "container_subnet" {
   type = "Microsoft.Network/virtualNetworks/subnets@2024-05-01"
 
   name      = var.containerSubnetName
@@ -25,8 +23,6 @@ resource "azapi_update_resource" "container_subnet" {
       networkSecurityGroup = {
         id = azurerm_network_security_group.container_nsg.id
       }
-      privateEndpointNetworkPolicies    = "string"
-      privateLinkServiceNetworkPolicies = "string"
       serviceEndpoints = [
         {
           locations = [
@@ -40,9 +36,7 @@ resource "azapi_update_resource" "container_subnet" {
   response_export_values = ["*"]
 }
 
-resource "azapi_update_resource" "relay_subnet" {
-  depends_on = [azurerm_resource_provider_registration.cloudshell_providers]
-
+resource "azapi_resource" "relay_subnet" {
   type = "Microsoft.Network/virtualNetworks/subnets@2024-05-01"
 
   name      = var.relaySubnetName
@@ -66,9 +60,7 @@ resource "azapi_update_resource" "relay_subnet" {
   response_export_values = ["*"]
 }
 
-resource "azapi_update_resource" "storage_subnet" {
-  depends_on = [azurerm_resource_provider_registration.cloudshell_providers]
-
+resource "azapi_resource" "storage_subnet" {
   type = "Microsoft.Network/virtualNetworks/subnets@2024-05-01"
 
   name      = var.storageSubnetName
