@@ -2,7 +2,7 @@ resource "azurerm_storage_account" "cloudshell" {
   name                = lower(var.storageAccountName)
   resource_group_name = data.azurerm_virtual_network.vnet.resource_group_name
 
-  location                 = data.azurerm_virtual_network.vnet.location
+  location                 = local.location
   account_tier             = "Standard"
   account_replication_type = "LRS"
   account_kind             = "StorageV2"

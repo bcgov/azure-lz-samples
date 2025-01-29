@@ -1,4 +1,77 @@
-# cloud_shell_vnet
+# How to use this module
+
+## Prerequisites
+
+To use this module, it is required to have the following:
+
+- A Virtual Network (VNET)
+
+> NOTE: All other resources, including 3x Subnets, Network Security Groups (NSGs), Private Endpoints, Relay Namespaces, Storage Accounts, and Storage Shares will be created by this module.
+
+## Usage
+
+You must update the values in the `provider.tf` file, specifically the **backend** configuration.
+
+```terraform
+backend "azurerm" {
+  resource_group_name  = "tfstate"
+  storage_account_name = "tfstate"
+  container_name       = "tfstate"
+  key                  = "terraform.tfstate"
+}
+```
+
+You must update the values in the `example.auto.tfvars` file.
+
+```terraform
+virtual_network_name           = "abc123-dev-vwan-spoke"
+virtual_network_resource_group = "abc123-dev-networking"
+
+containerSubnetName = "cloudshellsubnet"
+relaySubnetName     = "relaysubnet"
+storageSubnetName   = "storagesubnet"
+
+containerSubnetAddressPrefix = "10.41.0.0/28"
+relaySubnetAddressPrefix     = "10.41.0.32/28"
+storageSubnetAddressPrefix   = "10.41.0.16/28"
+
+privateEndpointName = "cloudshellRelayEndpoint"
+relayNamespaceName  = "cloudshell-relay-ae"
+
+storageAccountName = "privatecloudshell"
+fileShareName      = "cloudshell"
+```
+
+## Known Issues
+
+When attempting to delete (via `terraform destroy`) the resources created by this module, you may encounter the following type of error:
+
+```shell
+│ Error: deleting Network Profile (Subscription: "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx"
+│ Resource Group Name: "abc123-dev-networking"
+│ Network Profile Name: "aci-networkProfile-canadacentral"): performing Delete: unexpected status 400 (400 Bad Request) with error: NetworkProfileAlreadyInUseWithContainerNics: Network profile /subscriptions/xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx/resourceGroups/abc123-dev-networking/providers/Microsoft.Network/networkProfiles/aci-networkProfile-canadacentral is already in use with container nics 63fd584b-2bc7-4cc9-9d93-bffcdf947495_eth-cloudshellsubnet; cannot update or delete
+```
+
+As a work-around, you will need to manually run the following AZ CLI command to delete the network profile, and then re-run `terraform destroy`:
+
+```shell
+az network profile delete --name aci-networkProfile-canadacentral --resource-group abc123-dev-networking --subscription xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx --yes
+
+$NetworkProfile=$(az network vnet subnet show --subscription 60e89f81-a15c-4d7a-9be3-c3795a33a277 --resource-group abc123-dev-networking --vnet-name abc123-dev-vwan-spoke --name cloudshellsubnet --output tsv --query ipConfigurationProfiles[].id)
+$NETWORK_PROFILE_ID=$(az network profile list --subscription 60e89f81-a15c-4d7a-9be3-c3795a33a277 --resource-group abc123-dev-networking --query [0].id --output tsv)
+
+az network profile delete --ids $NETWORK_PROFILE_ID --yes
+
+$NETWORK_PROFILE_ID=$(az network profile list --subscription 60e89f81-a15c-4d7a-9be3-c3795a33a277 --resource-group abc123-dev-networking --query [0].id --output tsv)
+az resource update --ids $NETWORK_PROFILE_ID --set properties.containerNetworkInterfaceConfigurations=[]
+
+$NETWORK_PROFILE_ID
+/subscriptions/60e89f81-a15c-4d7a-9be3-c3795a33a277/resourceGroups/abc123-dev-networking/providers/Microsoft.Network/networkProfiles/aci-networkProfile-canadacentral
+
+$NETWORK_PROFILE_ID.ContainerNetworkInterfaceConfigurations = []
+
+az network nic delete --subscription 60e89f81-a15c-4d7a-9be3-c3795a33a277 --resource-group abc123-dev-networking -n 8234d890-f094-4dd3-8718-103b46d3644a_eth-cloudshellsubnet
+```
 
 <!-- BEGIN_TF_DOCS -->
 ## Requirements

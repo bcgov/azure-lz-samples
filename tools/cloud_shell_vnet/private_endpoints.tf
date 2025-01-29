@@ -5,7 +5,7 @@ resource "azurerm_private_endpoint" "example" {
   ]
 
   name                = var.privateEndpointName
-  location            = data.azurerm_virtual_network.vnet.location
+  location            = local.location
   resource_group_name = data.azurerm_virtual_network.vnet.resource_group_name
   subnet_id           = azapi_resource.relay_subnet.id
 
@@ -18,6 +18,7 @@ resource "azurerm_private_endpoint" "example" {
 
   lifecycle {
     ignore_changes = [
+      private_dns_zone_group, # NOTE: This is added automatically with the automation of the PE DNS Zone
       tags
     ]
   }

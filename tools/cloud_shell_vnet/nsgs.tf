@@ -1,6 +1,6 @@
 resource "azurerm_network_security_group" "container_nsg" {
   name                = "private-cloudshell"
-  location            = data.azurerm_virtual_network.vnet.location
+  location            = local.location
   resource_group_name = data.azurerm_virtual_network.vnet.resource_group_name
 
   security_rule {
@@ -25,7 +25,7 @@ resource "azurerm_network_security_group" "container_nsg" {
 
 resource "azurerm_network_security_group" "relay_nsg" {
   name                = "private-cloudshell-relay"
-  location            = data.azurerm_virtual_network.vnet.location
+  location            = local.location
   resource_group_name = data.azurerm_virtual_network.vnet.resource_group_name
 
   lifecycle {
@@ -37,7 +37,7 @@ resource "azurerm_network_security_group" "relay_nsg" {
 
 resource "azurerm_network_security_group" "storage_nsg" {
   name                = "private-cloudshell-storage"
-  location            = data.azurerm_virtual_network.vnet.location
+  location            = local.location
   resource_group_name = data.azurerm_virtual_network.vnet.resource_group_name
 
   lifecycle {
