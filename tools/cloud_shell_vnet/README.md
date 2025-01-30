@@ -23,7 +23,7 @@ backend "azurerm" {
 }
 ```
 
-You must update the values in the `example.auto.tfvars` file. Please refer to the [Use Cloud Shell in an Azure virtual network](https://learn.microsoft.com/en-us/azure/cloud-shell/vnet/overview) docuemtnation for details on subnet sizes.
+You must update the values in the `example.auto.tfvars` file. Please refer to the [Use Cloud Shell in an Azure virtual network](https://learn.microsoft.com/en-us/azure/cloud-shell/vnet/overview) documentation for details on subnet sizes.
 
 ```terraform
 virtual_network_name           = "abc123-dev-vwan-spoke"
