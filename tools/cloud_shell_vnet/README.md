@@ -21,7 +21,7 @@ backend "azurerm" {
 }
 ```
 
-You must update the values in the `example.auto.tfvars` file.
+You must update the values in the `example.auto.tfvars` file. Please refer to the [Use Cloud Shell in an Azure virtual network](https://learn.microsoft.com/en-us/azure/cloud-shell/vnet/overview) docuemtnation for details on subnet sizes.
 
 ```terraform
 virtual_network_name           = "abc123-dev-vwan-spoke"
@@ -36,7 +36,7 @@ relaySubnetAddressPrefix     = "10.41.0.32/28"
 storageSubnetAddressPrefix   = "10.41.0.16/28"
 
 privateEndpointName = "cloudshellRelayEndpoint"
-relayNamespaceName  = "cloudshell-relay-ae"
+relayNamespaceName  = "cloudshell-relay"
 
 storageAccountName = "privatecloudshell"
 fileShareName      = "cloudshell"
@@ -52,26 +52,11 @@ When attempting to delete (via `terraform destroy`) the resources created by thi
 │ Network Profile Name: "aci-networkProfile-canadacentral"): performing Delete: unexpected status 400 (400 Bad Request) with error: NetworkProfileAlreadyInUseWithContainerNics: Network profile /subscriptions/xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx/resourceGroups/abc123-dev-networking/providers/Microsoft.Network/networkProfiles/aci-networkProfile-canadacentral is already in use with container nics 63fd584b-2bc7-4cc9-9d93-bffcdf947495_eth-cloudshellsubnet; cannot update or delete
 ```
 
-As a work-around, you will need to manually run the following AZ CLI command to delete the network profile, and then re-run `terraform destroy`:
+The reason for this is because the Container Instance (that is created behind the scenes in a Microsoft subscription), is still using the Network Profile. According to Microsoft Support, after you disconnect from the Cloud Shell, this container will automatically be deleted. However, there is **no set period of time** for this to happen. It could be 30 minutes, an hour, or **several hours**!
 
-```shell
-az network profile delete --name aci-networkProfile-canadacentral --resource-group abc123-dev-networking --subscription xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx --yes
+To confirm the Container Instance has been deleted, check the **Network Profile** resource's activity logs for the "**Removes Containers**" Operation. This event is initiated by the `Azure Container Instance Service`. After this event has been logged, the `"containerNetworkInterfaces": []` property will be empty, and you can then delete the Network Profile.
 
-$NetworkProfile=$(az network vnet subnet show --subscription 60e89f81-a15c-4d7a-9be3-c3795a33a277 --resource-group abc123-dev-networking --vnet-name abc123-dev-vwan-spoke --name cloudshellsubnet --output tsv --query ipConfigurationProfiles[].id)
-$NETWORK_PROFILE_ID=$(az network profile list --subscription 60e89f81-a15c-4d7a-9be3-c3795a33a277 --resource-group abc123-dev-networking --query [0].id --output tsv)
-
-az network profile delete --ids $NETWORK_PROFILE_ID --yes
-
-$NETWORK_PROFILE_ID=$(az network profile list --subscription 60e89f81-a15c-4d7a-9be3-c3795a33a277 --resource-group abc123-dev-networking --query [0].id --output tsv)
-az resource update --ids $NETWORK_PROFILE_ID --set properties.containerNetworkInterfaceConfigurations=[]
-
-$NETWORK_PROFILE_ID
-/subscriptions/60e89f81-a15c-4d7a-9be3-c3795a33a277/resourceGroups/abc123-dev-networking/providers/Microsoft.Network/networkProfiles/aci-networkProfile-canadacentral
-
-$NETWORK_PROFILE_ID.ContainerNetworkInterfaceConfigurations = []
-
-az network nic delete --subscription 60e89f81-a15c-4d7a-9be3-c3795a33a277 --resource-group abc123-dev-networking -n 8234d890-f094-4dd3-8718-103b46d3644a_eth-cloudshellsubnet
-```
+> NOTE: You could create an **Azure Alert** to monitor for this event to notify you when the Container Instance has been deleted.
 
 <!-- BEGIN_TF_DOCS -->
 ## Requirements
