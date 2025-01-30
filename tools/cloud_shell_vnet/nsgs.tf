@@ -16,6 +16,8 @@ resource "azurerm_network_security_group" "container_nsg" {
     destination_address_prefix = var.containerSubnetAddressPrefix
   }
 
+  tags = var.tags
+
   lifecycle {
     ignore_changes = [
       tags

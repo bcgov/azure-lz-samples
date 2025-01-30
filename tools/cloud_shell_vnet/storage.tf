@@ -8,6 +8,9 @@ resource "azurerm_storage_account" "cloudshell" {
   account_kind             = "StorageV2"
   access_tier              = "Cool"
 
+  https_traffic_only_enabled = true
+  min_tls_version            = "TLS1_2"
+
   network_rules {
     default_action = "Deny"
     bypass         = ["None"]
@@ -16,8 +19,8 @@ resource "azurerm_storage_account" "cloudshell" {
       azapi_resource.storage_subnet.id
     ]
   }
-  https_traffic_only_enabled = true
-  min_tls_version            = "TLS1_2"
+
+  tags = var.tags
 
   lifecycle {
     ignore_changes = [

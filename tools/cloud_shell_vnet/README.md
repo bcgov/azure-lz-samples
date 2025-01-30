@@ -5,6 +5,8 @@
 To use this module, it is required to have the following:
 
 - A Virtual Network (VNET)
+- Subscription ID for the `hashicorp/azurerm` provider (required when using v4.x)
+  - See the `provider.tf` file for details
 
 > NOTE: All other resources, including 3x Subnets, Network Security Groups (NSGs), Private Endpoints, Relay Namespaces, Storage Accounts, and Storage Shares will be created by this module.
 
@@ -110,7 +112,6 @@ No modules.
 | <a name="input_relayNamespaceName"></a> [relayNamespaceName](#input\_relayNamespaceName) | Name of the Relay Namespace | `string` | n/a | yes |
 | <a name="input_relaySubnetAddressPrefix"></a> [relaySubnetAddressPrefix](#input\_relaySubnetAddressPrefix) | Address prefix for the relay subnet. | `string` | n/a | yes |
 | <a name="input_relaySubnetName"></a> [relaySubnetName](#input\_relaySubnetName) | Name of the subnet to use for Azure Relay. | `string` | `"relaysubnet"` | no |
-| <a name="input_resource_providers"></a> [resource\_providers](#input\_resource\_providers) | The list of required Azure Resource Providers to register | `list(string)` | <pre>[<br/>  "Microsoft.CloudShell",<br/>  "Microsoft.ContainerInstance",<br/>  "Microsoft.Relay"<br/>]</pre> | no |
 | <a name="input_storageAccountName"></a> [storageAccountName](#input\_storageAccountName) | Name of the Storage Account | `string` | n/a | yes |
 | <a name="input_storageSubnetAddressPrefix"></a> [storageSubnetAddressPrefix](#input\_storageSubnetAddressPrefix) | Address prefix for the storage subnet. | `string` | n/a | yes |
 | <a name="input_storageSubnetName"></a> [storageSubnetName](#input\_storageSubnetName) | Name of the subnet to use for storage. | `string` | `"storagesubnet"` | no |

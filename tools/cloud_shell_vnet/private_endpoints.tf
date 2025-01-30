@@ -16,6 +16,8 @@ resource "azurerm_private_endpoint" "example" {
     subresource_names              = ["namespace"]
   }
 
+  tags = var.tags
+
   lifecycle {
     ignore_changes = [
       private_dns_zone_group, # NOTE: This is added automatically with the automation of the PE DNS Zone

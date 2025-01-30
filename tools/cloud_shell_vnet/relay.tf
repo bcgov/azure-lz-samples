@@ -5,6 +5,8 @@ resource "azurerm_relay_namespace" "cloudshell" {
 
   sku_name = "Standard"
 
+  tags = var.tags
+
   lifecycle {
     ignore_changes = [
       tags
