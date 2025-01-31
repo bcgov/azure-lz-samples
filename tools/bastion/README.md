@@ -8,7 +8,7 @@ To use this module, it is required to have the following:
 - Subscription ID for the `hashicorp/azurerm` provider (required when using v4.x)
   - See the `provider.tf` file for details
 
-> NOTE: All other resources, including the Resource Group, "AzureBastionSubnet" Subnet, Network Security Groups (NSG) with required inbound/outbound rules, Public IP Address, and Bastion Host will be created by this module.
+> NOTE: All other resources, including the Resource Group, "AzureBastionSubnet" Subnet, Network Security Groups (NSG) with required inbound and outbound rules, Public IP Address, and Bastion Host will be created by this module.
 
 ## Usage
 
