@@ -11,8 +11,7 @@ terraform {
   required_providers {
     azurerm = {
       source  = "hashicorp/azurerm"
-      version = "~> 3.116"
-      # NOTE: Aligned with the version used in the AVM module (unable to update to v4.x until the AVM module is updated)
+      version = "~> 4.0"
     }
 
     azapi = {
@@ -42,6 +41,9 @@ provider "azurerm" {
       prevent_deletion_if_contains_resources = false
     }
   }
+  # subscription_id is now required with AzureRM provider 4.0. Use either of the following methods:
+  # subscription_id = "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx"
+  # export ARM_SUBSCRIPTION_ID=60e89f81-a15c-4d7a-9be3-c3795a33a277
 }
 
 provider "azapi" {

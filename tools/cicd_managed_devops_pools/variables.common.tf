@@ -1,9 +1,3 @@
-variable "environment" {
-  description = "Which Azure environment to deploy to. Options are: forge, or live."
-  type        = string
-  default     = "live"
-}
-
 variable "resource_group_name" {
   description = "(Required) The name of the resource group in which to create the resources."
   type        = string

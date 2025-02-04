@@ -12,3 +12,8 @@ variable "managed_devops_pool_subnet_name" {
   description = "The name of the existing subnet to use for the Managed DevOps Pool"
   type        = string
 }
+
+variable "managed_devops_pool_subnet_address_prefix" {
+  description = "The address prefix for the subnet to use for the Managed DevOps Pool"
+  type        = string
+}
