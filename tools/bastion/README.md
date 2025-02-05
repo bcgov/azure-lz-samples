@@ -76,10 +76,19 @@ bastionSubnetAddressPrefix = "10.41.0.0/26"
 | Name | Description | Type | Default | Required |
 |------|-------------|------|---------|:--------:|
 | <a name="input_bastionSubnetAddressPrefix"></a> [bastionSubnetAddressPrefix](#input\_bastionSubnetAddressPrefix) | Address prefix for the bastion subnet. Must be at least w.x.y.z/26 | `string` | n/a | yes |
-| <a name="input_bastion_host_name"></a> [bastion\_host\_name](#input\_bastion\_host\_name) | The name of the Bastion Host | `string` | n/a | yes |
+| <a name="input_bastion_host_name"></a> [bastion\_host\_name](#input\_bastion\_host\_name) | (Required) The name of the Bastion Host | `string` | n/a | yes |
+| <a name="input_copy_paste_enabled"></a> [copy\_paste\_enabled](#input\_copy\_paste\_enabled) | (Optional) Is Copy/Paste feature enabled for the Bastion Host. Defaults to true. | `bool` | `true` | no |
+| <a name="input_file_copy_enabled"></a> [file\_copy\_enabled](#input\_file\_copy\_enabled) | (Optional) Is File Copy feature enabled for the Bastion Host. Defaults to false. | `bool` | `null` | no |
+| <a name="input_ip_connect_enabled"></a> [ip\_connect\_enabled](#input\_ip\_connect\_enabled) | (Optional) Is IP Connect feature enabled for the Bastion Host. Defaults to false. | `bool` | `null` | no |
+| <a name="input_kerberos_enabled"></a> [kerberos\_enabled](#input\_kerberos\_enabled) | (Optional) Is Kerberos feature enabled for the Bastion Host. Defaults to false. | `bool` | `null` | no |
 | <a name="input_location"></a> [location](#input\_location) | The location/region where the Bastion Host should be created | `string` | n/a | yes |
 | <a name="input_resource_group_name"></a> [resource\_group\_name](#input\_resource\_group\_name) | The name of the resource group in which to create the Bastion Host | `string` | n/a | yes |
+| <a name="input_scale_units"></a> [scale\_units](#input\_scale\_units) | (Optional) The number of scale units for the Bastion Host. Defaults to 2. | `number` | `2` | no |
+| <a name="input_session_recording_enabled"></a> [session\_recording\_enabled](#input\_session\_recording\_enabled) | (Optional) Enable session recording for the Bastion Host | `bool` | `null` | no |
+| <a name="input_shareable_link_enabled"></a> [shareable\_link\_enabled](#input\_shareable\_link\_enabled) | (Optional) Is Shareable Link feature enabled for the Bastion Host. Defaults to false. | `bool` | `null` | no |
+| <a name="input_sku"></a> [sku](#input\_sku) | (Optional) Accepted values are Developer, Basic, Standard and Premium. | `string` | `"Basic"` | no |
 | <a name="input_tags"></a> [tags](#input\_tags) | Tags to apply to all resources | `map(string)` | <pre>{<br/>  "Environment": "Bastion"<br/>}</pre> | no |
+| <a name="input_tunneling_enabled"></a> [tunneling\_enabled](#input\_tunneling\_enabled) | (Optional) Enable tunneling through the Bastion Host | `bool` | `null` | no |
 | <a name="input_virtual_network_name"></a> [virtual\_network\_name](#input\_virtual\_network\_name) | Name of the existing virtual network | `string` | n/a | yes |
 | <a name="input_virtual_network_resource_group"></a> [virtual\_network\_resource\_group](#input\_virtual\_network\_resource\_group) | Name of the resource group containing the virtual network | `string` | n/a | yes |
 
@@ -87,7 +96,7 @@ bastionSubnetAddressPrefix = "10.41.0.0/26"
 
 | Name | Description |
 |------|-------------|
-| <a name="output_azure_bastion_name"></a> [azure\_bastion\_name](#output\_azure\_bastion\_name) | n/a |
-| <a name="output_azurerm_public_ip_address"></a> [azurerm\_public\_ip\_address](#output\_azurerm\_public\_ip\_address) | n/a |
-| <a name="output_azurerm_resource_group_name"></a> [azurerm\_resource\_group\_name](#output\_azurerm\_resource\_group\_name) | n/a |
+| <a name="output_bastion"></a> [bastion](#output\_bastion) | n/a |
+| <a name="output_public_ip_address"></a> [public\_ip\_address](#output\_public\_ip\_address) | n/a |
+| <a name="output_resource_group_name"></a> [resource\_group\_name](#output\_resource\_group\_name) | n/a |
 <!-- END_TF_DOCS -->

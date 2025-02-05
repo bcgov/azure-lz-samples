@@ -3,11 +3,6 @@ variable "resource_group_name" {
   type        = string
 }
 
-variable "bastion_host_name" {
-  description = "The name of the Bastion Host"
-  type        = string
-}
-
 variable "location" {
   description = "The location/region where the Bastion Host should be created"
   type        = string
