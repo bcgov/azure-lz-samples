@@ -12,6 +12,9 @@ To use this module, it is required to have the following:
   - A subnet for the private endpoint
     - There is **no minimum size** required. Keep in mind that this subnet can be used for all Private Endpoints, and is not exclusive to the self-hosted runner solution.
 
+> [!IMPORTANT]
+> The Virtual Network (VNET) should be the **_existing_** VNet within the Subscription that was created as part of your Project Set (ie. `abc123-dev-vwan-spoke`). You should create the required Subnets within this VNet.
+
 ## Usage
 
 You must update the values in the `provider.tf` file, specifically the **backend** configuration.
