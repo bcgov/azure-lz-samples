@@ -13,6 +13,9 @@ To use this module, it is required to have the following:
   - Microsoft.DevOpsInfrastructure
   - Microsoft.DevCenter
 
+> [!IMPORTANT]
+> The Virtual Network (VNET) should be the **_existing_** VNet within the Subscription that was created as part of your Project Set (ie. `abc123-dev-vwan-spoke`). The subnet will be created within this VNet.
+
 ## Usage
 
 You must update the values in the `provider.tf` file, specifically the **backend** configuration.

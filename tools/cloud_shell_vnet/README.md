@@ -8,7 +8,11 @@ To use this module, it is required to have the following:
 - Subscription ID for the `hashicorp/azurerm` provider (required when using v4.x)
   - See the `provider.tf` file for details
 
-> NOTE: All other resources, including 3x Subnets, Network Security Groups (NSGs), Private Endpoints, Relay Namespaces, Storage Accounts, and Storage Shares will be created by this module.
+> [!NOTE]
+> All other resources, including 3x Subnets, Network Security Groups (NSGs), Private Endpoints, Relay Namespaces, Storage Accounts, and Storage Shares will be created by this module.
+
+> [!IMPORTANT]
+> The Virtual Network (VNET) should be the **_existing_** VNet within the Subscription that was created as part of your Project Set (ie. `abc123-dev-vwan-spoke`). The subnets will be created within this VNet.
 
 ## Usage
 
