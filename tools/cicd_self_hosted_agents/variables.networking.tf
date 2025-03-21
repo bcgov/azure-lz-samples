@@ -13,12 +13,27 @@ variable "container_app_subnet_name" {
   type        = string
 }
 
+variable "container_app_subnet_address_prefix" {
+  description = "The address prefix for the container app subnet"
+  type        = string
+}
+
 variable "container_instance_subnet_name" {
   description = "The name of the existing subnet to use for the container instance"
   type        = string
 }
 
+variable "container_instance_subnet_address_prefix" {
+  description = "The address prefix for the container instance subnet"
+  type        = string
+}
+
 variable "private_endpoint_subnet_name" {
   description = "The name of the existing subnet for Private Endpoints"
+  type        = string
+}
+
+variable "private_endpoint_subnet_address_prefix" {
+  description = "The address prefix for the private endpoint subnet"
   type        = string
 }
