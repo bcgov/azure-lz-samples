@@ -1,6 +1,6 @@
 locals {
   virtual_network_id = format("/subscriptions/%s/resourceGroups/%s/providers/Microsoft.Network/virtualNetworks/%s",
-    data.azurerm_subscription.current.subscription_id, var.virtual_network_resource_group, var.virtual_network_name
+    data.azurerm_subscription.current.subscription_id, var.existing_virtual_network_resource_group_name, var.existing_virtual_network_name
   )
 }
 

@@ -5,6 +5,22 @@
 To use this module, it is required to have the following:
 
 - A Virtual Network (VNET)
+- The following Resource Providers need to be registered in the target subscription:
+  - Microsoft.App
+  - Microsoft.ContainerInstance
+  - Microsoft.ContainerRegistry
+  - Microsoft.ContainerService
+  - Microsoft.OperationalInsights
+  - GitHub.Network
+
+```cli
+az provider register --namespace Microsoft.App
+az provider register --namespace Microsoft.ContainerInstance
+az provider register --namespace Microsoft.ContainerRegistry
+az provider register --namespace Microsoft.ContainerService
+az provider register --namespace Microsoft.OperationalInsights
+az provider register --namespace GitHub.Network
+```
 
 > [!IMPORTANT]
 > The Virtual Network (VNET) should be the **_existing_** VNet within the Subscription that was created as part of your Project Set (ie. `abc123-tools-vwan-spoke`). The required Subnets will be created by the module.
@@ -117,6 +133,7 @@ Please refer to the official [terraform-azurerm-avm-ptn-cicd-agents-and-runners]
 | [azurerm_resource_group.rg](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/resource_group) | resource |
 | [azurerm_client_config.current](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/data-sources/client_config) | data source |
 | [azurerm_subscription.current](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/data-sources/subscription) | data source |
+| [azurerm_virtual_network.vnet](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/data-sources/virtual_network) | data source |
 
 ## Inputs
 
@@ -129,18 +146,19 @@ Please refer to the official [terraform-azurerm-avm-ptn-cicd-agents-and-runners]
 | <a name="input_container_instance_subnet_address_prefix"></a> [container\_instance\_subnet\_address\_prefix](#input\_container\_instance\_subnet\_address\_prefix) | The address prefix for the container instance subnet | `string` | n/a | yes |
 | <a name="input_container_instance_subnet_name"></a> [container\_instance\_subnet\_name](#input\_container\_instance\_subnet\_name) | The name of the existing subnet to use for the container instance | `string` | n/a | yes |
 | <a name="input_environment"></a> [environment](#input\_environment) | Which Azure environment to deploy to. Options are: forge, or live. | `string` | `"live"` | no |
+| <a name="input_existing_virtual_network_name"></a> [existing\_virtual\_network\_name](#input\_existing\_virtual\_network\_name) | The name of the existing virtual network | `string` | n/a | yes |
+| <a name="input_existing_virtual_network_resource_group_name"></a> [existing\_virtual\_network\_resource\_group\_name](#input\_existing\_virtual\_network\_resource\_group\_name) | The name of the resource group containing the virtual network | `string` | n/a | yes |
 | <a name="input_github_personal_access_token"></a> [github\_personal\_access\_token](#input\_github\_personal\_access\_token) | The PAT is used to generate a token to register the runner with GitHub. | `string` | n/a | yes |
 | <a name="input_location"></a> [location](#input\_location) | (Required) Azure region to deploy to. Changing this forces a new resource to be created. | `string` | n/a | yes |
 | <a name="input_postfix"></a> [postfix](#input\_postfix) | A postfix used to build default names if no name has been supplied for a specific resource type. | `string` | n/a | yes |
 | <a name="input_private_endpoint_subnet_address_prefix"></a> [private\_endpoint\_subnet\_address\_prefix](#input\_private\_endpoint\_subnet\_address\_prefix) | The address prefix for the private endpoint subnet | `string` | n/a | yes |
 | <a name="input_private_endpoint_subnet_name"></a> [private\_endpoint\_subnet\_name](#input\_private\_endpoint\_subnet\_name) | The name of the existing subnet for Private Endpoints | `string` | n/a | yes |
 | <a name="input_resource_group_name"></a> [resource\_group\_name](#input\_resource\_group\_name) | (Required) The name of the resource group in which to create the resources. | `string` | n/a | yes |
+| <a name="input_subscription_id"></a> [subscription\_id](#input\_subscription\_id) | The Azure Subscription ID to use for the deployment. | `string` | n/a | yes |
 | <a name="input_tags"></a> [tags](#input\_tags) | (Optional) A map of tags to add to the resources | `map(string)` | `null` | no |
 | <a name="input_version_control_system_organization"></a> [version\_control\_system\_organization](#input\_version\_control\_system\_organization) | The organization of the version control system. | `string` | n/a | yes |
 | <a name="input_version_control_system_repository"></a> [version\_control\_system\_repository](#input\_version\_control\_system\_repository) | The repository of the version control system. | `string` | n/a | yes |
 | <a name="input_version_control_system_type"></a> [version\_control\_system\_type](#input\_version\_control\_system\_type) | The type of version control system. | `string` | `"github"` | no |
-| <a name="input_virtual_network_name"></a> [virtual\_network\_name](#input\_virtual\_network\_name) | The name of the existing virtual network | `string` | n/a | yes |
-| <a name="input_virtual_network_resource_group"></a> [virtual\_network\_resource\_group](#input\_virtual\_network\_resource\_group) | The name of the resource group containing the virtual network | `string` | n/a | yes |
 
 ## Outputs
 

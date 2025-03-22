@@ -1,3 +1,5 @@
+subscription_id = "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx"
+
 resource_group_name = "caf-ghr"
 location            = "Canada Central"
 
@@ -8,8 +10,8 @@ version_control_system_organization = "bcgov-c"   # The organization name in the
 version_control_system_repository   = "REPO_NAME" # The repository name in the version control system
 # export TF_VAR_github_personal_access_token=<your_github_personal_access_token>
 
-virtual_network_resource_group = "abc123-tools-networking"
-virtual_network_name           = "abc123-tools-vwan-spoke"
+existing_virtual_network_resource_group_name = "abc123-tools-networking"
+existing_virtual_network_name                = "abc123-tools-vwan-spoke"
 
 container_app_subnet_name           = "ghr-aca"
 container_app_subnet_address_prefix = "1.2.3.4/27" # must be a minimum size of `/27`

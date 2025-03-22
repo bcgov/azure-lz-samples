@@ -1,3 +1,8 @@
+variable "subscription_id" {
+  description = "The Azure Subscription ID to use for the deployment."
+  type        = string
+}
+
 variable "environment" {
   description = "Which Azure environment to deploy to. Options are: forge, or live."
   type        = string
