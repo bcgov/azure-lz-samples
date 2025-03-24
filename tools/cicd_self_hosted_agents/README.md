@@ -13,6 +13,7 @@ To use this module, it is required to have the following:
   - Microsoft.OperationalInsights
   - GitHub.Network
 
+**Example Azure CLI:**
 ```cli
 az provider register --namespace Microsoft.App
 az provider register --namespace Microsoft.ContainerInstance
@@ -68,6 +69,12 @@ container_instance_subnet_address_prefix = "1.2.3.4/28" # must be a minimum size
 private_endpoint_subnet_name           = "SUBNET_NAME"
 private_endpoint_subnet_address_prefix = "1.2.3.4/28"
 ```
+
+## Post Deployment
+
+Depending on the configuration used for the deployment, you may not see the self-hosted runners in the GitHub repository. This is because the Azure Container App `compute_types` are dynamically created on-demand (ie. ephemeral), and are also configured to scale to zero when not in use.
+
+If you use the `azure_container_instance` `compute_types`, this will appear in the GitHub repository as a self-hosted runner immediately, as the instance will be running post-deployment.
 
 ## Known Issues
 
