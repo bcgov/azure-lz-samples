@@ -146,30 +146,33 @@ Please refer to the official [terraform-azurerm-avm-ptn-cicd-agents-and-runners]
 
 | Name | Description | Type | Default | Required |
 |------|-------------|------|---------|:--------:|
-| <a name="input_compute_types"></a> [compute\_types](#input\_compute\_types) | The types of compute to use. Allowed values are 'azure\_container\_app' and 'azure\_container\_instance'. | `set(string)` | <pre>[<br/>  "azure_container_app"<br/>]</pre> | no |
-| <a name="input_container_app_subnet_address_prefix"></a> [container\_app\_subnet\_address\_prefix](#input\_container\_app\_subnet\_address\_prefix) | The address prefix for the container app subnet | `string` | n/a | yes |
-| <a name="input_container_app_subnet_name"></a> [container\_app\_subnet\_name](#input\_container\_app\_subnet\_name) | The name of the existing subnet to use for the container app | `string` | n/a | yes |
-| <a name="input_container_instance_count"></a> [container\_instance\_count](#input\_container\_instance\_count) | The number of container instances to create | `number` | `2` | no |
-| <a name="input_container_instance_subnet_address_prefix"></a> [container\_instance\_subnet\_address\_prefix](#input\_container\_instance\_subnet\_address\_prefix) | The address prefix for the container instance subnet | `string` | n/a | yes |
-| <a name="input_container_instance_subnet_name"></a> [container\_instance\_subnet\_name](#input\_container\_instance\_subnet\_name) | The name of the existing subnet to use for the container instance | `string` | n/a | yes |
-| <a name="input_environment"></a> [environment](#input\_environment) | Which Azure environment to deploy to. Options are: forge, or live. | `string` | `"live"` | no |
-| <a name="input_existing_virtual_network_name"></a> [existing\_virtual\_network\_name](#input\_existing\_virtual\_network\_name) | The name of the existing virtual network | `string` | n/a | yes |
-| <a name="input_existing_virtual_network_resource_group_name"></a> [existing\_virtual\_network\_resource\_group\_name](#input\_existing\_virtual\_network\_resource\_group\_name) | The name of the resource group containing the virtual network | `string` | n/a | yes |
-| <a name="input_github_personal_access_token"></a> [github\_personal\_access\_token](#input\_github\_personal\_access\_token) | The PAT is used to generate a token to register the runner with GitHub. | `string` | n/a | yes |
+| <a name="input_compute_types"></a> [compute\_types](#input\_compute\_types) | (Optional) The types of compute to use. Allowed values are 'azure\_container\_app' and 'azure\_container\_instance'. | `set(string)` | <pre>[<br/>  "azure_container_app"<br/>]</pre> | no |
+| <a name="input_container_app_subnet_address_prefix"></a> [container\_app\_subnet\_address\_prefix](#input\_container\_app\_subnet\_address\_prefix) | (Required) The address prefix for the container app subnet | `string` | n/a | yes |
+| <a name="input_container_app_subnet_name"></a> [container\_app\_subnet\_name](#input\_container\_app\_subnet\_name) | (Required) The name of the existing subnet to use for the container app | `string` | n/a | yes |
+| <a name="input_container_instance_count"></a> [container\_instance\_count](#input\_container\_instance\_count) | (Optional) The number of container instances to create | `number` | `2` | no |
+| <a name="input_container_instance_subnet_address_prefix"></a> [container\_instance\_subnet\_address\_prefix](#input\_container\_instance\_subnet\_address\_prefix) | (Required) The address prefix for the container instance subnet | `string` | n/a | yes |
+| <a name="input_container_instance_subnet_name"></a> [container\_instance\_subnet\_name](#input\_container\_instance\_subnet\_name) | (Required) The name of the existing subnet to use for the container instance | `string` | n/a | yes |
+| <a name="input_environment"></a> [environment](#input\_environment) | (Optional) Which Azure environment to deploy to. Options are: forge, or live. | `string` | `"live"` | no |
+| <a name="input_existing_virtual_network_name"></a> [existing\_virtual\_network\_name](#input\_existing\_virtual\_network\_name) | (Required) The name of the existing virtual network | `string` | n/a | yes |
+| <a name="input_existing_virtual_network_resource_group_name"></a> [existing\_virtual\_network\_resource\_group\_name](#input\_existing\_virtual\_network\_resource\_group\_name) | (Required) The name of the resource group containing the virtual network | `string` | n/a | yes |
+| <a name="input_github_personal_access_token"></a> [github\_personal\_access\_token](#input\_github\_personal\_access\_token) | (Required) The PAT is used to generate a token to register the runner with GitHub. | `string` | n/a | yes |
 | <a name="input_location"></a> [location](#input\_location) | (Required) Azure region to deploy to. Changing this forces a new resource to be created. | `string` | n/a | yes |
-| <a name="input_postfix"></a> [postfix](#input\_postfix) | A postfix used to build default names if no name has been supplied for a specific resource type. | `string` | n/a | yes |
-| <a name="input_private_endpoint_subnet_address_prefix"></a> [private\_endpoint\_subnet\_address\_prefix](#input\_private\_endpoint\_subnet\_address\_prefix) | The address prefix for the private endpoint subnet | `string` | n/a | yes |
-| <a name="input_private_endpoint_subnet_name"></a> [private\_endpoint\_subnet\_name](#input\_private\_endpoint\_subnet\_name) | The name of the existing subnet for Private Endpoints | `string` | n/a | yes |
+| <a name="input_postfix"></a> [postfix](#input\_postfix) | (Required) A postfix used to build default names if no name has been supplied for a specific resource type. | `string` | n/a | yes |
+| <a name="input_private_endpoint_subnet_address_prefix"></a> [private\_endpoint\_subnet\_address\_prefix](#input\_private\_endpoint\_subnet\_address\_prefix) | (Required) The address prefix for the private endpoint subnet | `string` | n/a | yes |
+| <a name="input_private_endpoint_subnet_name"></a> [private\_endpoint\_subnet\_name](#input\_private\_endpoint\_subnet\_name) | (Required) The name of the existing subnet for Private Endpoints | `string` | n/a | yes |
 | <a name="input_resource_group_name"></a> [resource\_group\_name](#input\_resource\_group\_name) | (Required) The name of the resource group in which to create the resources. | `string` | n/a | yes |
-| <a name="input_subscription_id"></a> [subscription\_id](#input\_subscription\_id) | The Azure Subscription ID to use for the deployment. | `string` | n/a | yes |
+| <a name="input_subscription_id"></a> [subscription\_id](#input\_subscription\_id) | (Required) The Azure Subscription ID where the self-hosted runners will be deployed. | `string` | n/a | yes |
 | <a name="input_tags"></a> [tags](#input\_tags) | (Optional) A map of tags to add to the resources | `map(string)` | `null` | no |
-| <a name="input_version_control_system_organization"></a> [version\_control\_system\_organization](#input\_version\_control\_system\_organization) | The organization of the version control system. | `string` | n/a | yes |
-| <a name="input_version_control_system_repository"></a> [version\_control\_system\_repository](#input\_version\_control\_system\_repository) | The repository of the version control system. | `string` | n/a | yes |
-| <a name="input_version_control_system_type"></a> [version\_control\_system\_type](#input\_version\_control\_system\_type) | The type of version control system. | `string` | `"github"` | no |
+| <a name="input_version_control_system_organization"></a> [version\_control\_system\_organization](#input\_version\_control\_system\_organization) | (Required) The organization of the version control system. | `string` | n/a | yes |
+| <a name="input_version_control_system_repository"></a> [version\_control\_system\_repository](#input\_version\_control\_system\_repository) | (Required) The repository of the version control system. | `string` | n/a | yes |
+| <a name="input_version_control_system_type"></a> [version\_control\_system\_type](#input\_version\_control\_system\_type) | (Optional) The type of version control system. | `string` | `"github"` | no |
 
 ## Outputs
 
 | Name | Description |
 |------|-------------|
-| <a name="output_ghrunners"></a> [ghrunners](#output\_ghrunners) | n/a |
+| <a name="output_ghrunners"></a> [ghrunners](#output\_ghrunners) | GitHub runners module outputs |
+| <a name="output_github_runners_container_app_subnet"></a> [github\_runners\_container\_app\_subnet](#output\_github\_runners\_container\_app\_subnet) | GitHub runners container app subnet |
+| <a name="output_github_runners_container_instance_subnet"></a> [github\_runners\_container\_instance\_subnet](#output\_github\_runners\_container\_instance\_subnet) | GitHub runners container instance subnet |
+| <a name="output_github_runners_private_endpoint_subnet"></a> [github\_runners\_private\_endpoint\_subnet](#output\_github\_runners\_private\_endpoint\_subnet) | GitHub runners private endpoint subnet |
 <!-- END_TF_DOCS -->

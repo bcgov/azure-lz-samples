@@ -1,12 +1,12 @@
 terraform {
   required_version = ">= 1.9.0"
 
-  backend "azurerm" {
-    resource_group_name  = "tfstate"
-    storage_account_name = "tfstate"
-    container_name       = "tfstate"
-    key                  = "terraform.tfstate"
-  }
+  # backend "azurerm" {
+  #   resource_group_name  = "tfstate"
+  #   storage_account_name = "tfstate"
+  #   container_name       = "tfstate"
+  #   key                  = "terraform.tfstate"
+  # }
 
   required_providers {
     azurerm = {
@@ -54,4 +54,6 @@ provider "azurerm" {
   subscription_id = var.subscription_id
 }
 
-provider "azapi" {}
+provider "azapi" {
+  disable_default_output = true # Required to avoid outputting the read-only properties (See: https://github.com/Azure/terraform-azurerm-avm-ptn-cicd-agents-and-runners/issues/114)
+}
