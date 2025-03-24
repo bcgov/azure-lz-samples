@@ -7,7 +7,7 @@ resource "azurerm_resource_group" "rg" {
 
 module "github_runners" {
   source  = "Azure/avm-ptn-cicd-agents-and-runners/azurerm"
-  version = "~> 0.2.0"
+  version = "~> 0.3"
 
   location = azurerm_resource_group.rg.location
   postfix  = var.postfix
@@ -26,12 +26,13 @@ module "github_runners" {
 
   virtual_network_creation_enabled = false
   virtual_network_id               = local.virtual_network_id
-  container_app_subnet_id          = local.container_app_subnet_id
-  container_instance_subnet_id     = local.container_instance_subnet_id
-  container_instance_subnet_name   = var.container_instance_subnet_name
+
+  container_app_subnet_id = azapi_resource.github_runners_container_app_subnet.id
+
+  container_instance_subnet_id   = azapi_resource.github_runners_container_instance_subnet.id
+  container_instance_subnet_name = var.container_instance_subnet_name
 
   container_registry_private_dns_zone_creation_enabled = false
-  container_registry_dns_zone_id                       = local.container_registry_dns_zone_id
 
   nat_gateway_creation_enabled = false
   public_ip_creation_enabled   = false
@@ -40,7 +41,7 @@ module "github_runners" {
   use_private_networking              = true
   use_default_container_image         = true
 
-  container_registry_private_endpoint_subnet_id   = local.private_endpoint_subnet_id
+  container_registry_private_endpoint_subnet_id   = azapi_resource.github_runners_private_endpoint_subnet.id
   container_registry_private_endpoint_subnet_name = var.private_endpoint_subnet_name
 
   tags = var.tags

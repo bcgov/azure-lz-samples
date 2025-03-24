@@ -11,8 +11,7 @@ terraform {
   required_providers {
     azurerm = {
       source  = "hashicorp/azurerm"
-      version = "~> 3.113"
-      # NOTE: Aligned with the version used in the AVM module (unable to update to v4.x until the AVM module is updated)
+      version = "~> 4.0"
     }
 
     azapi = {
@@ -27,7 +26,7 @@ terraform {
 
     random = {
       source  = "hashicorp/random"
-      version = "~> 3.6"
+      version = "~> 3.5"
     }
 
     time = {
@@ -47,7 +46,14 @@ provider "azurerm" {
       prevent_deletion_if_contains_resources = false
     }
   }
+
+  # subscription_id is now required with AzureRM provider 4.0. Use either of the following methods:
+  # subscription_id = "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx"
+  # export ARM_SUBSCRIPTION_ID=xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
+
+  subscription_id = var.subscription_id
 }
 
 provider "azapi" {
+  disable_default_output = true # Required to avoid outputting the read-only properties (See: https://github.com/Azure/terraform-azurerm-avm-ptn-cicd-agents-and-runners/issues/114)
 }

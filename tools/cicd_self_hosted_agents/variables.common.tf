@@ -1,7 +1,12 @@
-variable "environment" {
-  description = "Which Azure environment to deploy to. Options are: forge, or live."
+variable "subscription_id" {
+  description = "(Required) The Azure Subscription ID where the self-hosted runners will be deployed."
   type        = string
-  default     = "live"
+}
+
+variable "environment" {
+  description = "(Optional) Which Azure environment to deploy to. Options are: forge, or live."
+  type        = string
+  default     = "live" # NOTE: Do not change this unless instructed to by the Public Cloud team.
 }
 
 variable "resource_group_name" {
@@ -21,7 +26,7 @@ variable "location" {
 
 variable "postfix" {
   type        = string
-  description = "A postfix used to build default names if no name has been supplied for a specific resource type."
+  description = "(Required) A postfix used to build default names if no name has been supplied for a specific resource type."
 
   validation {
     condition     = length(var.postfix) <= 20
