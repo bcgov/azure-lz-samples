@@ -41,7 +41,7 @@ az provider register --namespace GitHub.Network
 You must update the values in the `provider.tf` file, specifically the **backend** configuration. Please refer to the following Microsoft documentation about [Store Terraform state in Azure Storage](https://learn.microsoft.com/en-us/azure/developer/terraform/store-state-in-azure-storage).
 
 > [!IMPORTANT]
-> The Terraform state Storage Account is not created as part of this module. You must create this outside of this module, and provide the appropriate values in the `provider.tf` file. This Terraform state is **only** used for the self-hosted runners module, and is **not used** with/for any infrastructure that is deployed using the self-hotsed runners.
+> The Terraform state Storage Account is not created as part of this module. You must create this outside of this module, and provide the appropriate values in the `provider.tf` file. This Terraform state is **only** used for the self-hosted runners module, and is **not used** with/for any infrastructure that is deployed using the self-hosted runners.
 
 ```terraform
 backend "azurerm" {

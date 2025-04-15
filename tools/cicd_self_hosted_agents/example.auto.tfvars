@@ -1,4 +1,4 @@
-subscription_id = "xxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" # This is the subscription ID where the resources will be created (ie. abc123-tools)
+subscription_id = "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" # This is the subscription ID where the resources will be created (ie. abc123-tools)
 
 resource_group_name = "caf-ghr"
 location            = "Canada Central"
