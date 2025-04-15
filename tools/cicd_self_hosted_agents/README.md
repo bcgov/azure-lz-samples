@@ -14,6 +14,7 @@ To use this module, it is required to have the following:
   - GitHub.Network
 
 **Example Azure CLI:**
+
 ```cli
 az provider register --namespace Microsoft.App
 az provider register --namespace Microsoft.ContainerInstance
@@ -29,13 +30,18 @@ az provider register --namespace GitHub.Network
 > [!NOTE]
 > The `example.auto.tfvars` file will need to provide the appropriate **address_prefixes** for the subnets, based on the size required.
 >
-> The subnet for the container app requires a minimum size of `/27`.
-> The subnet for the container instance requires a minimum size of `/28`.
-> The subnet for the private endpoint has no minimum size requirement, and is not exclusive to the self-hosted runner solution.
+> The subnet for the **container app** requires a minimum size of `/27`.
+>
+> The subnet for the **container instance** requires a minimum size of `/28`.
+>
+> The subnet for the **private endpoint** has no minimum size requirement, and is not exclusive to the self-hosted runner solution.
 
 ## Usage
 
-You must update the values in the `provider.tf` file, specifically the **backend** configuration.
+You must update the values in the `provider.tf` file, specifically the **backend** configuration. Please refer to the following Microsoft documentation about [Store Terraform state in Azure Storage](https://learn.microsoft.com/en-us/azure/developer/terraform/store-state-in-azure-storage).
+
+> [!IMPORTANT]
+> The Terraform state Storage Account is not created as part of this module. You must create this outside of this module, and provide the appropriate values in the `provider.tf` file. This Terraform state is **only** used for the self-hosted runners module, and is **not used** with/for any infrastructure that is deployed using the self-hosted runners.
 
 ```terraform
 backend "azurerm" {
@@ -49,16 +55,20 @@ backend "azurerm" {
 You must update the values in the `example.auto.tfvars` file.
 
 ```terraform
+subscription_id = "xxx" # This is the subscription ID where the resources will be created (ie. abc123-tools)
+
 resource_group_name = "cicd-self-hosted-agents"
+location            = "Canada Central"
 
 postfix = "cicd"
 
 version_control_system_type         = "github"
 version_control_system_organization = "bcgov-c" # The organization name in the version control system
 version_control_system_repository   = "REPO_NAME"
+# export TF_VAR_github_personal_access_token=<your_github_personal_access_token>
 
-virtual_network_resource_group = "VNET_RESOURCE_GROUP"
-virtual_network_name           = "VNET_NAME"
+virtual_network_resource_group = "VNET_RESOURCE_GROUP" # Existing Virtual Network Resource Group Name (ie. abc123-tools-networking)
+virtual_network_name           = "VNET_NAME" # Existing Virtual Network Name (ie. abc123-tools-vwan-spoke)
 
 container_app_subnet_name           = "SUBNET_NAME"
 container_app_subnet_address_prefix = "1.2.3.4/27" # must be a minimum size of `/27`
@@ -68,6 +78,12 @@ container_instance_subnet_address_prefix = "1.2.3.4/28" # must be a minimum size
 
 private_endpoint_subnet_name           = "SUBNET_NAME"
 private_endpoint_subnet_address_prefix = "1.2.3.4/28"
+
+tags = { # NOTE: Add this to avoid removing tags that have been inherited from the resource group (on subsequent runs)
+  account_coding = "000000000000000000000000"
+  billing_group  = "abc123"
+  ministry_name  = "MINISTRY_NAME"
+}
 ```
 
 ## Post Deployment
@@ -119,7 +135,7 @@ Please refer to the official [terraform-azurerm-avm-ptn-cicd-agents-and-runners]
 | Name | Version |
 |------|---------|
 | <a name="provider_azapi"></a> [azapi](#provider\_azapi) | 2.3.0 |
-| <a name="provider_azurerm"></a> [azurerm](#provider\_azurerm) | 4.24.0 |
+| <a name="provider_azurerm"></a> [azurerm](#provider\_azurerm) | 4.26.0 |
 
 ## Modules
 
