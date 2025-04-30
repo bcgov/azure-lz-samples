@@ -2,21 +2,21 @@ resource "azurerm_network_security_group" "github_hosted_runners_nsg" {
   name                = var.github_hosted_runners_subnet_name
   location            = var.location
   resource_group_name = var.existing_virtual_network_resource_group_name
-  
+
   tags = var.tags
 
-# Note: The Security Rules are based on the following official documentation: https://docs.github.com/en/organizations/managing-organization-settings/configuring-private-networking-for-github-hosted-runners-in-your-organization
+  # Note: The Security Rules are based on the following official documentation: https://docs.github.com/en/organizations/managing-organization-settings/configuring-private-networking-for-github-hosted-runners-in-your-organization
 
   security_rule {
-    name                       = "AllowVnetOutBoundOverwrite"
-    priority                   = 200
-    direction                  = "Inbound"
-    access                     = "Allow"
-    protocol                   = "Tcp"
-    source_port_range          = "*"
-    destination_port_range     = "443"
-    source_address_prefix      = "*"
-    destination_address_prefix = "VirtualNetwork"
+    name                         = "AllowVnetOutBoundOverwrite"
+    priority                     = 200
+    direction                    = "Inbound"
+    access                       = "Allow"
+    protocol                     = "Tcp"
+    source_port_range            = "*"
+    destination_port_range       = "443"
+    source_address_prefix        = "*"
+    destination_address_prefix   = "VirtualNetwork"
     destination_address_prefixes = []
   }
 

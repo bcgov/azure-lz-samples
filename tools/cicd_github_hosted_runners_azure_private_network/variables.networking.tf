@@ -17,3 +17,8 @@ variable "github_hosted_runners_subnet_address_prefix" {
   description = "(Required) The address prefix for the GitHub hosted runners subnet"
   type        = string
 }
+
+variable "network_settings_name" {
+  description = "(Required) The name of the network settings resource"
+  type        = string
+}

@@ -20,7 +20,7 @@ resource "azapi_resource" "github_hosted_runners_subnet" {
         }
       ]
       networkSecurityGroup = {
-        id = azurerm_network_security_group.github_hosted_runners.id
+        id = azurerm_network_security_group.github_hosted_runners_nsg.id
       }
     }
   }
