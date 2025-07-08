@@ -7,7 +7,7 @@ resource "azurerm_resource_group" "rg" {
 
 module "github_runners" {
   source  = "Azure/avm-ptn-cicd-agents-and-runners/azurerm"
-  version = "~> 0.3"
+  version = "~> 0.4"
 
   location = azurerm_resource_group.rg.location
   postfix  = var.postfix

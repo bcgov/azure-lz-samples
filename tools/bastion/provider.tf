@@ -34,6 +34,7 @@ provider "azurerm" {
   # subscription_id is now required with AzureRM provider 4.0. Use either of the following methods:
   # subscription_id = "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx"
   # export ARM_SUBSCRIPTION_ID=xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
+  subscription_id = var.subscription_id
 }
 
 provider "azapi" {}
