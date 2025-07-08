@@ -134,14 +134,14 @@ Please refer to the official [terraform-azurerm-avm-ptn-cicd-agents-and-runners]
 
 | Name | Version |
 |------|---------|
-| <a name="provider_azapi"></a> [azapi](#provider\_azapi) | 2.3.0 |
-| <a name="provider_azurerm"></a> [azurerm](#provider\_azurerm) | 4.26.0 |
+| <a name="provider_azapi"></a> [azapi](#provider\_azapi) | 2.5.0 |
+| <a name="provider_azurerm"></a> [azurerm](#provider\_azurerm) | 4.35.0 |
 
 ## Modules
 
 | Name | Source | Version |
 |------|--------|---------|
-| <a name="module_github_runners"></a> [github\_runners](#module\_github\_runners) | Azure/avm-ptn-cicd-agents-and-runners/azurerm | ~> 0.3 |
+| <a name="module_github_runners"></a> [github\_runners](#module\_github\_runners) | Azure/avm-ptn-cicd-agents-and-runners/azurerm | ~> 0.4 |
 
 ## Resources
 

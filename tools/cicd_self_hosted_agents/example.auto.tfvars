@@ -6,8 +6,8 @@ location            = "Canada Central"
 postfix = "ghr"
 
 version_control_system_type         = "github"
-version_control_system_organization = "bcgov-c"   # The organization name in the version control system
-version_control_system_repository   = "REPO_NAME" # The repository name in the version control system
+version_control_system_organization = "bcgov-c"                                 # The organization name in the version control system
+version_control_system_repository   = "ecf-azure-startup-sample-app-serverless" # The repository name in the version control system
 # export TF_VAR_github_personal_access_token=<your_github_personal_access_token>
 
 existing_virtual_network_resource_group_name = "abc123-tools-networking" # Existing Virtual Network Resource Group Name (ie. abc123-tools-networking)
