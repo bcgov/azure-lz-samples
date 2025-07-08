@@ -6,7 +6,7 @@ location            = "Canada Central"
 postfix = "ghr"
 
 version_control_system_type         = "github"
-version_control_system_organization = "bcgov-c"                                 # The organization name in the version control system
+version_control_system_organization = "bcgov-c"   # The organization name in the version control system
 version_control_system_repository   = "REPO_NAME" # The repository name in the version control system
 # export TF_VAR_github_personal_access_token=<your_github_personal_access_token>
 
