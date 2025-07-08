@@ -64,9 +64,9 @@ copy_paste_enabled = true # Configuration: Copy and paste
 
 | Name | Version |
 |------|---------|
-| <a name="provider_azapi"></a> [azapi](#provider\_azapi) | 2.2.0 |
-| <a name="provider_azurerm"></a> [azurerm](#provider\_azurerm) | 4.17.0 |
-| <a name="provider_random"></a> [random](#provider\_random) | 3.6.3 |
+| <a name="provider_azapi"></a> [azapi](#provider\_azapi) | 2.3.0 |
+| <a name="provider_azurerm"></a> [azurerm](#provider\_azurerm) | 4.28.0 |
+| <a name="provider_random"></a> [random](#provider\_random) | 3.7.2 |
 
 ## Modules
 
@@ -103,6 +103,7 @@ copy_paste_enabled = true # Configuration: Copy and paste
 | <a name="input_session_recording_enabled"></a> [session\_recording\_enabled](#input\_session\_recording\_enabled) | (Optional) Enable session recording for the Bastion Host | `bool` | `null` | no |
 | <a name="input_shareable_link_enabled"></a> [shareable\_link\_enabled](#input\_shareable\_link\_enabled) | (Optional) Is Shareable Link feature enabled for the Bastion Host. Defaults to false. | `bool` | `null` | no |
 | <a name="input_sku"></a> [sku](#input\_sku) | (Optional) Accepted values are Developer, Basic, Standard and Premium. | `string` | `"Basic"` | no |
+| <a name="input_subscription_id"></a> [subscription\_id](#input\_subscription\_id) | (Required) The Azure Subscription ID where the resources will be deployed. | `string` | n/a | yes |
 | <a name="input_tags"></a> [tags](#input\_tags) | Tags to apply to all resources | `map(string)` | <pre>{<br/>  "Environment": "Bastion"<br/>}</pre> | no |
 | <a name="input_tunneling_enabled"></a> [tunneling\_enabled](#input\_tunneling\_enabled) | (Optional) Enable tunneling through the Bastion Host | `bool` | `null` | no |
 | <a name="input_virtual_network_name"></a> [virtual\_network\_name](#input\_virtual\_network\_name) | Name of the existing virtual network | `string` | n/a | yes |

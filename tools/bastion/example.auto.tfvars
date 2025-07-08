@@ -1,10 +1,12 @@
-virtual_network_name           = "abc123-dev-vwan-spoke"
-virtual_network_resource_group = "abc123-dev-networking"
+subscription_id = "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" # This is the subscription ID where the resources will be created (ie. abc123-tools)
 
-resource_group_name        = "abc123-dev-bastion"
-bastion_host_name          = "bastion" # NOTE: Will be appended with a random string
+virtual_network_name           = "db78da-dev-vwan-spoke"
+virtual_network_resource_group = "db78da-dev-networking"
+
+resource_group_name        = "db78da-dev-bastion"
+bastion_host_name          = "db78da-bastion" # NOTE: Will be appended with a random string
 location                   = "canadacentral"
-bastionSubnetAddressPrefix = "10.41.0.0/26"
+bastionSubnetAddressPrefix = "10.41.14.0/26"
 
 sku                = "Basic"
 copy_paste_enabled = true # Configuration: Copy and paste
