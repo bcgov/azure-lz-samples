@@ -17,10 +17,11 @@ az provider register --namespace GitHub.Network
 
 > [!IMPORTANT]
 > The Virtual Network (VNET) should be the **_existing_** VNet within the Subscription that was created as part of your Project Set (ie. `abc123-tools-vwan-spoke`). The required Subnet will be created by the module.
+
 > [!NOTE]
 > The `example.auto.tfvars` file will need to provide the appropriate **address_prefixes** for the subnet, based on the size required.
 >
-> The subnet for the **GitHub Hosted Runners** has no minimum size requirement, and is dependent on the number of **GitHub hosted runners** that will be deployed.
+> The subnet for the **GitHub Hosted Runners** has no minimum size requirement, and is dependent on the number of runners that will be required. Per the [GitHub documentation](https://docs.github.com/en/enterprise-cloud@latest/admin/configuring-settings/configuring-private-networking-for-hosted-compute-products/about-azure-private-networking-for-github-hosted-runners-in-your-enterprise) "_Multiple NICs may appear for a single job in your subscription because the GitHub Actions service over-provisions resources to run jobs._" So it is not a one-to-one mapping of IP addresses to maximum concurrent runners.
 
 ## Usage
 
@@ -42,13 +43,17 @@ You must update the values in the `example.auto.tfvars` file.
 
 ```terraform
 subscription_id = "xxx" # This is the subscription ID where the resources will be created (ie. abc123-tools)
+
 location            = "Canada Central"
+
 existing_virtual_network_resource_group_name = "abc123-tools-networking" # Existing Virtual Network Resource Group Name
 existing_virtual_network_name                = "abc123-tools-vwan-spoke" # Existing Virtual Network Name
+
 github_hosted_runners_subnet_name           = "github-hosted-runners" # Name of the subnet to be created
 github_hosted_runners_subnet_address_prefix = "10.41.4.64/28"
 network_settings_name = "ghrs" # Name of the network settings resource
-# export TF_VAR_github_organization_id=123456
+# export TF_VAR_github_organization_id=123456 # Provide this value during deployment
+
 tags = { # NOTE: Add this to avoid removing tags that have been inherited from the resource group (on subsequent runs)
   account_coding = "000000000000000000000000"
   billing_group  = "abc123"
@@ -75,15 +80,48 @@ tags = { # NOTE: Add this to avoid removing tags that have been inherited from t
 > ```
 
 ## Post Deployment
+
 After the deployment is complete, a **Hosted compute networking** `Network Configuration` needs to be created in the GitHub Enterprise account. This needs to be completed by the DevEx team. They will require the **network settings resource ID** from the `Network Settings` resource created by this module.
+
 Additionally, they will need to create a **Runner Group** and make that group available to the target **GitHub Organization**, along with adding the GitHub-hosted runners to the **Runner Group**.
+
 Once the Runner Group is available to the GitHub Organization, an Organization Administrator can grant specific repositories access to the **Runner Group**. Only then will the GitHub-hosted runners appear in the **Settings** > **Actions** > **Runners** section of the repository (under the heading "Shared with this repository").
+
+### Network Settings Resource ID
+
+To obtain the **Network Settings Resource ID** after the deployment is complete, the simplest way is to use the Azure portal.
+
+This Terraform module will create the resource in the same Resource Group as the Virtual Network. This is a hidden resource, so you will need to select "show hidden types" in the Azure portal to see it.
+
+Select the `github.network/networksettings` resource, and then **JSON view**. The `GitHubId` property will appear in the `tags` list. Copy this value, as it will be required by the DevEx team to create the **Hosted compute networking** `Network Configuration` in the GitHub Enterprise account.
+
+### GitHub Enterprise Values
+
+The following is the list of values that will be required by the DevEx team:
+
+- GitHub Repository Name
+  - This will control which repositories can use the GitHub-hosted runners
+- GHE Network Configuration Name
+  - Suggestion: Use your target subscription's name, such as `abc123-tools`, for easy identification
+- Azure VNet Resource ID
+  - This is the `GitHubId` property value from the `tags` after deploying the `github.network/networksettings` resource
+- Runner Group Name
+  - Suggestion: Use something with your Project Set's license plate, such as `abc123-tools-runners`
+- Runner Image
+  - Options include: `Ubuntu 24.04`, `Ubuntu 22.04`, `Windows Server 2022`, or `Windows Server 2025`
+- VM Size
+  - Options include: `2-core`, `4-core`, `8-core`, `16-core`, `32-core`, `64-core`, or `96-core`
+    - NOTE: The smallest VM size for **Windows** is `8-core`
+  - Suggestion: Use `2-core` to start, and then request an increase if required
+- Maximum number of runners
+  - Suggestion: Use 2 to start, and then request an increase if required
 
 ## Known Issues
 
 ### Network Settings
 
 Once the Network Settings resource is created, it is not supported to update the GitHub Org ID. This is because the `BusinessID` property is immutable. If you attempt to update the GitHub Org ID, you will receive the following error: `The operation is not allowed. Attempt to modify immutable property 'BusinessId'`.
+
 If you need to change the GitHub Org ID, you must destroy the Network Settings resource and re-create it.
 
 <!-- BEGIN_TF_DOCS -->

@@ -1,4 +1,4 @@
-subscription_id = "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" # This is the subscription ID where the resources will be created (ie. abc123-tools)
+subscription_id = "d6d8a667-4d0d-4cc1-9245-0a7e2834caeb" # This is the subscription ID where the resources will be created (ie. abc123-tools)
 
 location = "Canada Central"
 
