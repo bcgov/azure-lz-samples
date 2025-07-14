@@ -8,9 +8,10 @@ existing_virtual_network_name                = "e833c2-tools-vwan-spoke" # Exist
 github_hosted_runners_subnet_name           = "github-hosted-runners" # Name of the subnet to be created (ie. github-hosted-runners)
 github_hosted_runners_subnet_address_prefix = "10.41.4.64/28"
 network_settings_name                       = "ghrs"
-# export TF_VAR_github_organization_id=123456
+# export TF_VAR_github_organization_id=123456 # Provide the appropriate value during deployment
 
-tags = { # NOTE: Add this to avoid removing tags that have been inherited from the resource group (on subsequent runs)
+# NOTE: Adding tags are optional
+tags = {
   account_coding = "000000000000000000000000"
   billing_group  = "e833c2"
   ministry_name  = "CITZ"

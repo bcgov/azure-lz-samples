@@ -3,11 +3,11 @@ variable "subscription_id" {
   type        = string
 }
 
-variable "environment" {
-  description = "(Optional) Which Azure environment to deploy to. Options are: forge, or live."
-  type        = string
-  default     = "live" # NOTE: Do not change this unless instructed to by the Public Cloud team.
-}
+# variable "environment" {
+#   description = "(Optional) Which Azure environment to deploy to. Options are: forge, or live."
+#   type        = string
+#   default     = "live" # NOTE: Do not change this unless instructed to by the Public Cloud team.
+# }
 
 variable "location" {
   description = "(Required) Azure region to deploy to. Changing this forces a new resource to be created."
