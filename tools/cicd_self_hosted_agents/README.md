@@ -110,10 +110,6 @@ When deploying the self-hosted runners, the DNS configuration is added to the Az
 
 It has been observed that despite the DNS configuration being removed on subsequent `terraform apply` runs, the DNS configuration is automatically re-added by the Azure Policy in the Landing Zones.
 
-### Deleting Deployment
-
-When deleting this deployment, if using the `azure_container_app` **Compute Type**, the Resource Group that is automatically created by the Azure Container App Service (ie. `RESOURCE_GROUP_NAME_container_app_infra`) is not deleted, even though `prevent_deletion_if_contains_resources = false` is set in the `provider.tf` file. You will need to manually delete this Resource Group.
-
 ### Other
 
 Please refer to the official [terraform-azurerm-avm-ptn-cicd-agents-and-runners](https://github.com/Azure/terraform-azurerm-avm-ptn-cicd-agents-and-runners) GitHub repository for any known issues.
