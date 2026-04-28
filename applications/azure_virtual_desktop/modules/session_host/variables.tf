@@ -68,6 +68,21 @@ variable "os_disk_storage_account_type" {
   default     = "StandardSSD_LRS"
 }
 
+variable "os_disk_size_gb" {
+  description = "(Optional) OS disk size in GB. When null the image default is used."
+  type        = number
+  default     = null
+}
+
+variable "diff_disk_settings" {
+  description = "(Optional) Ephemeral OS disk settings. When set, the OS disk is placed on the VM cache or NVMe disk for lower latency. Not compatible with os_disk_size_gb."
+  type = object({
+    option    = string           # CacheDisk or NvmeDisk
+    placement = optional(string) # CacheDisk or ResourceDisk
+  })
+  default = null
+}
+
 variable "patch_mode" {
   description = "(Optional) Windows patch mode for the session host VM."
   type        = string
@@ -118,6 +133,36 @@ variable "source_image_reference" {
     sku       = "win11-24h2-avd-m365"
     version   = "latest"
   }
+}
+
+variable "accelerated_networking_enabled" {
+  description = "(Optional) Whether accelerated networking is enabled on the NIC. Requires a VM size that supports it."
+  type        = bool
+  default     = false
+}
+
+variable "availability_zone" {
+  description = "(Optional) Availability zone number (1, 2, or 3) for the VM. Leave null to let Azure place the VM."
+  type        = number
+  default     = null
+}
+
+variable "boot_diagnostics_storage_account_uri" {
+  description = "(Optional) Storage account blob endpoint for boot diagnostics. When null, managed boot diagnostics are enabled using an Azure-managed storage account."
+  type        = string
+  default     = null
+}
+
+variable "enable_boot_diagnostics" {
+  description = "(Optional) Whether boot diagnostics are enabled on the VM."
+  type        = bool
+  default     = true
+}
+
+variable "extensions_time_budget" {
+  description = "(Optional) Duration budget for all VM extensions, in ISO 8601 format (e.g. PT1H30M)."
+  type        = string
+  default     = "PT1H30M"
 }
 
 variable "vm_role_assignments" {

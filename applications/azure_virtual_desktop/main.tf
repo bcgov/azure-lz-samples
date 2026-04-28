@@ -138,28 +138,35 @@ module "session_hosts" {
     module.networking,
   ]
 
-  resource_group_name          = azurerm_resource_group.avd_rg.name
-  location                     = azurerm_resource_group.avd_rg.location
-  subnet_id                    = each.value.subnet_id
-  host_pool_id                 = each.value.host_pool_id
-  host_pool_registration_token = each.value.host_pool_registration_token
-  vm_name                      = each.value.vm_name
-  computer_name                = each.value.computer_name
-  size                         = each.value.size
-  join_type                    = each.value.join_type
-  admin_username               = each.value.admin_username
-  admin_password               = each.value.admin_password
-  license_type                 = each.value.license_type
-  os_disk_storage_account_type = each.value.os_disk_storage_account_type
-  patch_mode                   = each.value.patch_mode
-  enable_automatic_updates     = each.value.enable_automatic_updates
-  provision_vm_agent           = each.value.provision_vm_agent
-  secure_boot_enabled          = each.value.secure_boot_enabled
-  vtpm_enabled                 = each.value.vtpm_enabled
-  source_image_id              = each.value.source_image_id
-  source_image_reference       = each.value.source_image_reference
-  vm_role_assignments          = each.value.vm_role_assignments
-  tags                         = each.value.tags
+  resource_group_name                  = azurerm_resource_group.avd_rg.name
+  location                             = azurerm_resource_group.avd_rg.location
+  subnet_id                            = each.value.subnet_id
+  host_pool_id                         = each.value.host_pool_id
+  host_pool_registration_token         = each.value.host_pool_registration_token
+  vm_name                              = each.value.vm_name
+  computer_name                        = each.value.computer_name
+  size                                 = each.value.size
+  join_type                            = each.value.join_type
+  admin_username                       = each.value.admin_username
+  admin_password                       = each.value.admin_password
+  license_type                         = each.value.license_type
+  os_disk_storage_account_type         = each.value.os_disk_storage_account_type
+  os_disk_size_gb                      = each.value.os_disk_size_gb
+  diff_disk_settings                   = each.value.diff_disk_settings
+  accelerated_networking_enabled       = each.value.accelerated_networking_enabled
+  availability_zone                    = each.value.availability_zone
+  enable_boot_diagnostics              = each.value.enable_boot_diagnostics
+  boot_diagnostics_storage_account_uri = each.value.boot_diagnostics_storage_account_uri
+  extensions_time_budget               = each.value.extensions_time_budget
+  patch_mode                           = each.value.patch_mode
+  enable_automatic_updates             = each.value.enable_automatic_updates
+  provision_vm_agent                   = each.value.provision_vm_agent
+  secure_boot_enabled                  = each.value.secure_boot_enabled
+  vtpm_enabled                         = each.value.vtpm_enabled
+  source_image_id                      = each.value.source_image_id
+  source_image_reference               = each.value.source_image_reference
+  vm_role_assignments                  = each.value.vm_role_assignments
+  tags                                 = each.value.tags
 }
 
 module "application_groups" {

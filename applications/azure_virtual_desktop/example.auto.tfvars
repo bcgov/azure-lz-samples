@@ -163,6 +163,74 @@ network_security_groups = {
       }
     }
   }
+
+  avd_session_hosts = {
+    name = "nsg-avd-session-hosts"
+    security_rules = {
+      # AVD session hosts require outbound HTTPS to Entra ID, AVD control plane,
+      # Azure Monitor, and Storage. KMS activation requires TCP 1688.
+      allow_entra_outbound = {
+        priority                   = 100
+        direction                  = "Outbound"
+        access                     = "Allow"
+        protocol                   = "Tcp"
+        source_port_range          = "*"
+        destination_port_range     = "443"
+        source_address_prefix      = "*"
+        destination_address_prefix = "AzureActiveDirectory"
+      }
+      allow_avd_service_outbound = {
+        priority                   = 110
+        direction                  = "Outbound"
+        access                     = "Allow"
+        protocol                   = "Tcp"
+        source_port_range          = "*"
+        destination_port_range     = "443"
+        source_address_prefix      = "*"
+        destination_address_prefix = "WindowsVirtualDesktop"
+      }
+      allow_monitor_outbound = {
+        priority                   = 120
+        direction                  = "Outbound"
+        access                     = "Allow"
+        protocol                   = "Tcp"
+        source_port_range          = "*"
+        destination_port_range     = "443"
+        source_address_prefix      = "*"
+        destination_address_prefix = "AzureMonitor"
+      }
+      allow_storage_outbound = {
+        priority                   = 130
+        direction                  = "Outbound"
+        access                     = "Allow"
+        protocol                   = "Tcp"
+        source_port_range          = "*"
+        destination_port_range     = "443"
+        source_address_prefix      = "*"
+        destination_address_prefix = "Storage"
+      }
+      allow_internet_https_outbound = {
+        priority                   = 140
+        direction                  = "Outbound"
+        access                     = "Allow"
+        protocol                   = "Tcp"
+        source_port_range          = "*"
+        destination_port_range     = "443"
+        source_address_prefix      = "*"
+        destination_address_prefix = "Internet"
+      }
+      allow_kms_activation_outbound = {
+        priority                   = 150
+        direction                  = "Outbound"
+        access                     = "Allow"
+        protocol                   = "Tcp"
+        source_port_range          = "*"
+        destination_port_range     = "1688"
+        source_address_prefix      = "*"
+        destination_address_prefix = "Internet"
+      }
+    }
+  }
 }
 
 subnets = {
@@ -172,10 +240,11 @@ subnets = {
     network_security_group_key = "avd_private_endpoints"
   }
 
-  # avd_session_hosts = {
-  #   name             = "snet-avd-session-hosts"
-  #   address_prefixes = ["10.41.9.64/27"]
-  # }
+  avd_session_hosts = {
+    name                       = "snet-avd-session-hosts"
+    address_prefixes           = ["10.41.9.64/26"]
+    network_security_group_key = "avd_session_hosts"
+  }
 }
 
 ### Supporting resources
@@ -253,28 +322,84 @@ application_groups = {
 ### Session host example:
 ### This module now supports Azure VM-based session hosts for standard-management host pools.
 ### Keep the example commented until you have a dedicated subnet with outbound access to Microsoft Entra and AVD service endpoints.
-# session_hosts = {
-#   pooled_primary = {
-#     host_pool_key        = "pooled_primary"
-#     subnet_key           = "avd_session_hosts"
-#     instance_count       = 1
-#     vm_name_prefix       = "vm-e833c2-avdsh"
-#     computer_name_prefix = "avdsh"
-#     size                 = "Standard_D4ds_v4"
-#     # tags = { excludeFromScaling = "true" } # Optional: align with scaling_plans[*].exclusion_tag.
-#     vm_role_assignments = {
-#       avd_users = {
-#         principal_id         = "00000000-0000-0000-0000-000000000000"
-#         principal_type       = "Group"
-#         role_definition_name = "Virtual Machine User Login"
-#       }
-#       avd_admins = {
-#         principal_id         = "00000000-0000-0000-0000-000000000000"
-#         principal_type       = "Group"
-#         role_definition_name = "Virtual Machine Administrator Login"
-#       }
+session_hosts = {
+  pooled_primary = {
+    host_pool_key        = "pooled_primary"
+    subnet_key           = "avd_session_hosts"
+    instance_count       = 1
+    vm_name_prefix       = "vm-e833c2-avdsh"
+    computer_name_prefix = "avdsh"
+    size                 = "Standard_D4ds_v4"
+    # tags = { excludeFromScaling = "true" } # Optional: align with scaling_plans[*].exclusion_tag.
+    vm_role_assignments = {
+      avd_admins = {
+        principal_id         = "26c9d2b5-dc78-460f-9b5c-4ae442ab5697" # PIM_DO_PuC_Dev_Infra_R_RE
+        principal_type       = "Group"
+        role_definition_name = "Virtual Machine Administrator Login"
+      }
+    }
+  }
+}
+
+# session_host_customization_example = {
+#   host_pool_key        = "pooled_primary"
+#   subnet_key           = "avd_session_hosts"
+#   instance_count       = 3
+#   vm_name_prefix       = "vm-e833c2-avdsh"
+#   computer_name_prefix = "avdsh"
+#   size                 = "Standard_D8ds_v5"
+#
+#   ### OS disk
+#   os_disk_storage_account_type = "Premium_LRS"  # StandardSSD_LRS (default) | Standard_LRS | Premium_LRS | UltraSSD_LRS
+#   os_disk_size_gb              = 256             # Override image default (usually 128 GB). Leave null to keep image default.
+#   # diff_disk_settings = {                       # Ephemeral OS disk for lowest latency stateless VMs.
+#   #   option    = "CacheDisk"                    # CacheDisk or NvmeDisk (requires NVMe-capable SKU)
+#   #   placement = "CacheDisk"                    # CacheDisk or ResourceDisk
+#   # }
+#
+#   ### Networking
+#   accelerated_networking_enabled = true          # Requires a VM size that supports AN (most v4/v5 D-series do).
+#
+#   ### Availability
+#   availability_zone = 1                          # Pin to zone 1, 2, or 3 for zone-redundant deployments.
+#
+#   ### Image: use source_image_reference for Marketplace images or source_image_id for Azure Compute Gallery/custom images.
+#   source_image_reference = {
+#     publisher = "MicrosoftWindowsDesktop"
+#     offer     = "office-365"
+#     sku       = "win11-24h2-avd-m365"
+#     version   = "latest"
+#   }
+#   # source_image_id = "/subscriptions/.../galleries/.../images/.../versions/latest"
+#
+#   ### Patching
+#   patch_mode               = "AutomaticByOS"    # AutomaticByOS | AutomaticByPlatform | Manual
+#   enable_automatic_updates = true
+#
+#   ### Diagnostics
+#   enable_boot_diagnostics              = true    # Managed boot diagnostics (default). Set to false to disable.
+#   # boot_diagnostics_storage_account_uri = "https://<account>.blob.core.windows.net/"  # Override to use a specific account.
+#
+#   ### Extensions
+#   extensions_time_budget = "PT2H"               # ISO 8601. Increase if large images or slow storage cause extension timeouts.
+#
+#   ### Admin credentials
+#   admin_username = "avdadmin"
+#   # admin_password = ""                          # Leave null (default) to generate a strong random password stored in Terraform state.
+#
+#   vm_role_assignments = {
+#     avd_users = {
+#       principal_id         = "00000000-0000-0000-0000-000000000000"
+#       principal_type       = "Group"
+#       role_definition_name = "Virtual Machine User Login"
+#     }
+#     avd_admins = {
+#       principal_id         = "26c9d2b5-dc78-460f-9b5c-4ae442ab5697" # PIM_DO_PuC_Dev_Infra_R_RE
+#       principal_type       = "Group"
+#       role_definition_name = "Virtual Machine Administrator Login"
 #     }
 #   }
+#   tags = { excludeFromScaling = "true" }
 # }
 
 ### Registration token rotation:
