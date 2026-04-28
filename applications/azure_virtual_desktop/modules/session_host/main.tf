@@ -131,7 +131,6 @@ resource "azurerm_virtual_machine_extension" "aad_login" {
   publisher                  = "Microsoft.Azure.ActiveDirectory"
   type                       = "AADLoginForWindows"
   type_handler_version       = "2.0"
-  automatic_upgrade_enabled  = true
   auto_upgrade_minor_version = true
   tags                       = var.tags
 
