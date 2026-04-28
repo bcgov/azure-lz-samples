@@ -138,18 +138,18 @@ module "session_hosts" {
     module.networking,
   ]
 
-  resource_group_name                  = azurerm_resource_group.avd_rg.name
-  location                             = azurerm_resource_group.avd_rg.location
-  subnet_id                            = each.value.subnet_id
-  host_pool_id                         = each.value.host_pool_id
-  host_pool_registration_token         = each.value.host_pool_registration_token
-  vm_name                              = each.value.vm_name
-  computer_name                        = each.value.computer_name
-  size                                 = each.value.size
-  join_type                            = each.value.join_type
-  admin_username                       = each.value.admin_username
-  admin_password                       = each.value.admin_password
-  license_type                         = each.value.license_type
+  resource_group_name          = azurerm_resource_group.avd_rg.name
+  location                     = azurerm_resource_group.avd_rg.location
+  subnet_id                    = each.value.subnet_id
+  host_pool_id                 = each.value.host_pool_id
+  host_pool_registration_token = each.value.host_pool_registration_token
+  vm_name                      = each.value.vm_name
+  computer_name                = each.value.computer_name
+  size                         = each.value.size
+  join_type                    = each.value.join_type
+  admin_username               = each.value.admin_username
+  admin_password               = each.value.admin_password
+  license_type                 = each.value.license_type
   os_disk_storage_account_type         = each.value.os_disk_storage_account_type
   os_disk_size_gb                      = each.value.os_disk_size_gb
   diff_disk_settings                   = each.value.diff_disk_settings
@@ -252,23 +252,68 @@ resource "azurerm_monitor_data_collection_rule" "session_hosts" {
   }
 
   data_sources {
+    # ---------------------------------------------------------------------------
+    # Performance counters required by the AVD Insights configuration workbook.
+    # Source: https://learn.microsoft.com/en-us/azure/virtual-desktop/insights-costs
+    # Split into two blocks because DCR requires a single sampling_frequency_in_seconds
+    # per performance_counter block, and AVD Insights specifies 30s for most
+    # counters and 60s for logical disk counters.
+    # ---------------------------------------------------------------------------
+
+    # 30-second counters: memory, physical disk, processor, terminal services,
+    # user input delay, RemoteFX network
     performance_counter {
-      name                          = "perf-core"
+      name                          = "perf-avd-30s"
       streams                       = ["Microsoft-Perf"]
-      sampling_frequency_in_seconds = 60
+      sampling_frequency_in_seconds = 30
       counter_specifiers = [
-        "\\Processor(_Total)\\% Processor Time",
-        "\\Memory\\Committed Bytes",
-        "\\LogicalDisk(_Total)\\Free Megabytes",
+        "\\Memory(*)\\Available Mbytes",
+        "\\Memory(*)\\Page Faults/sec",
+        "\\Memory(*)\\Pages/sec",
+        "\\Memory(*)\\% Committed Bytes In Use",
+        "\\PhysicalDisk(*)\\Avg. Disk Queue Length",
+        "\\PhysicalDisk(*)\\Avg. Disk sec/Read",
+        "\\PhysicalDisk(*)\\Avg. Disk sec/Transfer",
+        "\\PhysicalDisk(*)\\Avg. Disk sec/Write",
+        "\\Processor Information(_Total)\\% Processor Time",
+        "\\Terminal Services(*)\\Active Sessions",
+        "\\Terminal Services(*)\\Inactive Sessions",
+        "\\Terminal Services(*)\\Total Sessions",
+        "\\User Input Delay per Process(*)\\Max Input Delay",
+        "\\User Input Delay per Session(*)\\Max Input Delay",
+        "\\RemoteFX Network(*)\\Current TCP RTT",
+        "\\RemoteFX Network(*)\\Current UDP Bandwidth",
       ]
     }
 
+    # 60-second counters: logical disk (drive-specific, as required by AVD Insights)
+    performance_counter {
+      name                          = "perf-avd-60s"
+      streams                       = ["Microsoft-Perf"]
+      sampling_frequency_in_seconds = 60
+      counter_specifiers = [
+        "\\LogicalDisk(C:)\\% Free Space",
+        "\\LogicalDisk(C:)\\Avg. Disk Queue Length",
+        "\\LogicalDisk(C:)\\Avg. Disk sec/Transfer",
+        "\\LogicalDisk(C:)\\Current Disk Queue Length",
+      ]
+    }
+
+    # ---------------------------------------------------------------------------
+    # Windows Event Logs required by the AVD Insights configuration workbook.
+    # All 6 channels collected at all levels (no severity filter) so the
+    # workbook can render connection, session, and FSLogix events correctly.
+    # ---------------------------------------------------------------------------
     windows_event_log {
-      name    = "windows-core-events"
+      name    = "events-avd-insights"
       streams = ["Microsoft-Event"]
       x_path_queries = [
-        "Application!*[System[(Level=1 or Level=2 or Level=3)]]",
-        "System!*[System[(Level=1 or Level=2 or Level=3)]]",
+        "Application!*",
+        "System!*",
+        "Microsoft-Windows-TerminalServices-RemoteConnectionManager/Admin!*",
+        "Microsoft-Windows-TerminalServices-LocalSessionManager/Operational!*",
+        "Microsoft-FSLogix-Apps/Operational!*",
+        "Microsoft-FSLogix-Apps/Admin!*",
       ]
     }
   }
