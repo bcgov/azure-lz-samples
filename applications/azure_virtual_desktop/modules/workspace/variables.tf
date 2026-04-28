@@ -59,3 +59,12 @@ variable "enable_diagnostics" {
   type        = bool
   default     = false
 }
+
+variable "private_endpoints" {
+  description = "(Optional) Private endpoints to create for the workspace."
+  type = map(object({
+    subnet_id         = string
+    subresource_names = list(string)
+  }))
+  default = {}
+}

@@ -3,6 +3,11 @@ variable "resource_group_id" {
   type        = string
 }
 
+variable "resource_group_name" {
+  description = "(Required) The resource group name where the host pool will be created."
+  type        = string
+}
+
 variable "location" {
   description = "(Required) The Azure region for the host pool."
   type        = string
@@ -29,6 +34,66 @@ variable "description" {
   description = "(Optional) Description for the host pool."
   type        = string
   default     = null
+}
+
+variable "public_network_access" {
+  description = "(Optional) Public network access mode for the host pool."
+  type        = string
+  default     = "Disabled"
+}
+
+variable "deployment_scope" {
+  description = "(Optional) Deployment scope for the host pool."
+  type        = string
+  default     = "Geographical"
+}
+
+variable "management_type" {
+  description = "(Optional) Host pool management type."
+  type        = string
+  default     = "Standard"
+}
+
+variable "ring" {
+  description = "(Optional) Ring number for the host pool."
+  type        = number
+  default     = null
+}
+
+variable "vm_template" {
+  description = "(Optional) VM template JSON for session host configuration scenarios."
+  type        = string
+  default     = null
+}
+
+variable "allow_rdp_shortpath_with_private_link" {
+  description = "(Optional) Whether RDP Shortpath with Private Link is allowed."
+  type        = string
+  default     = "Disabled"
+}
+
+variable "direct_udp" {
+  description = "(Optional) Direct UDP transport setting."
+  type        = string
+  default     = "Default"
+}
+
+variable "managed_private_udp" {
+  description = "(Optional) Managed private UDP transport setting."
+  type        = string
+  default     = "Default"
+}
+
+variable "public_udp" {
+  description = "(Optional) Public UDP/STUN transport setting."
+  type        = string
+  default     = "Default"
+}
+
+variable "relay_udp" {
+  description = "(Optional) Relay/TURN UDP transport setting."
+  type        = string
+  default     = "Default"
 }
 
 variable "host_pool_type" {
@@ -119,4 +184,13 @@ variable "enable_diagnostics" {
   description = "(Optional) When true, diagnostic settings are created. Must be true only when log_analytics_workspace_id is also set. Separate bool keeps for_each keys known at plan time."
   type        = bool
   default     = false
+}
+
+variable "private_endpoints" {
+  description = "(Optional) Private endpoints to create for the host pool."
+  type = list(object({
+    subnet_id         = string
+    subresource_names = list(string)
+  }))
+  default = []
 }

@@ -7,6 +7,7 @@ output "host_pools" {
       host_pool_type        = host_pool.host_pool_type
       public_network_access = host_pool.public_network_access
       principal_id          = host_pool.principal_id
+      private_endpoint_ids  = host_pool.private_endpoint_ids
     }
   }
 }

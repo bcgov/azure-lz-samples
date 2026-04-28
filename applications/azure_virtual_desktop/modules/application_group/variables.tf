@@ -68,3 +68,13 @@ variable "enable_diagnostics" {
   type        = bool
   default     = false
 }
+
+variable "assignments" {
+  description = "(Optional) Azure RBAC assignments for the application group."
+  type = map(object({
+    principal_id         = string
+    principal_type       = optional(string)
+    role_definition_name = optional(string, "Desktop Virtualization User")
+  }))
+  default = {}
+}

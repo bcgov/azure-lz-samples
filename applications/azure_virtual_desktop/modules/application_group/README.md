@@ -21,12 +21,14 @@ No modules.
 | Name | Type |
 |------|------|
 | [azapi_resource.diagnostics](https://registry.terraform.io/providers/Azure/azapi/latest/docs/resources/resource) | resource |
+| [azurerm_role_assignment.assignment](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/role_assignment) | resource |
 | [azurerm_virtual_desktop_application_group.this](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/virtual_desktop_application_group) | resource |
 
 ## Inputs
 
 | Name | Description | Type | Default | Required |
 |------|-------------|------|---------|:--------:|
+| <a name="input_assignments"></a> [assignments](#input\_assignments) | (Optional) Azure RBAC assignments for the application group. | <pre>map(object({<br/>    principal_id         = string<br/>    principal_type       = optional(string)<br/>    role_definition_name = optional(string, "Desktop Virtualization User")<br/>  }))</pre> | `{}` | no |
 | <a name="input_description"></a> [description](#input\_description) | (Optional) Description for the application group. | `string` | `null` | no |
 | <a name="input_diagnostic_log_category_group"></a> [diagnostic\_log\_category\_group](#input\_diagnostic\_log\_category\_group) | (Optional) Diagnostic log category group. For AVD application groups, this must be 'allLogs'. | `string` | `"allLogs"` | no |
 | <a name="input_enable_diagnostics"></a> [enable\_diagnostics](#input\_enable\_diagnostics) | (Optional) When true, diagnostic settings are created for the application group. | `bool` | `false` | no |
@@ -43,6 +45,7 @@ No modules.
 
 | Name | Description |
 |------|-------------|
+| <a name="output_assignment_ids"></a> [assignment\_ids](#output\_assignment\_ids) | RBAC assignment IDs created for the application group. |
 | <a name="output_host_pool_id"></a> [host\_pool\_id](#output\_host\_pool\_id) | Host pool ID associated with the Azure Virtual Desktop application group. |
 | <a name="output_id"></a> [id](#output\_id) | Resource ID of the Azure Virtual Desktop application group. |
 | <a name="output_name"></a> [name](#output\_name) | Name of the Azure Virtual Desktop application group. |

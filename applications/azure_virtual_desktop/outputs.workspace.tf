@@ -2,9 +2,10 @@ output "workspaces" {
   description = "Map of Azure Virtual Desktop workspaces keyed by var.workspaces."
   value = {
     for key, workspace in module.workspaces : key => {
-      id            = workspace.id
-      name          = workspace.name
-      friendly_name = workspace.friendly_name
+      id                   = workspace.id
+      name                 = workspace.name
+      friendly_name        = workspace.friendly_name
+      private_endpoint_ids = workspace.private_endpoint_ids
     }
   }
 }
@@ -13,10 +14,11 @@ output "application_groups" {
   description = "Map of Azure Virtual Desktop application groups keyed by var.application_groups."
   value = {
     for key, application_group in module.application_groups : key => {
-      id           = application_group.id
-      name         = application_group.name
-      type         = application_group.type
-      host_pool_id = application_group.host_pool_id
+      id             = application_group.id
+      name           = application_group.name
+      type           = application_group.type
+      host_pool_id   = application_group.host_pool_id
+      assignment_ids = application_group.assignment_ids
     }
   }
 }

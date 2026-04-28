@@ -23,12 +23,19 @@ locals {
 
   host_pool_properties = merge(
     {
-      hostPoolType          = var.host_pool_type
-      loadBalancerType      = var.load_balancer_type
-      preferredAppGroupType = var.preferred_app_group_type
-      publicNetworkAccess   = "Disabled"
-      startVMOnConnect      = var.start_vm_on_connect
-      validationEnvironment = var.validation_environment
+      allowRDPShortPathWithPrivateLink = var.allow_rdp_shortpath_with_private_link
+      deploymentScope                  = var.deployment_scope
+      directUDP                        = var.direct_udp
+      hostPoolType                     = var.host_pool_type
+      loadBalancerType                 = var.load_balancer_type
+      managedPrivateUDP                = var.managed_private_udp
+      managementType                   = var.management_type
+      preferredAppGroupType            = var.preferred_app_group_type
+      publicNetworkAccess              = var.public_network_access
+      publicUDP                        = var.public_udp
+      relayUDP                         = var.relay_udp
+      startVMOnConnect                 = var.start_vm_on_connect
+      validationEnvironment            = var.validation_environment
     },
     var.agent_update_type == "Scheduled" ? { agentUpdate = local.agent_update } : {},
     var.friendly_name == null ? {} : { friendlyName = var.friendly_name },
@@ -36,6 +43,8 @@ locals {
     var.custom_rdp_properties == null ? {} : { customRdpProperty = var.custom_rdp_properties },
     var.max_session_limit == null ? {} : { maxSessionLimit = var.max_session_limit },
     var.personal_desktop_assignment_type == null ? {} : { personalDesktopAssignmentType = var.personal_desktop_assignment_type },
+    var.ring == null ? {} : { ring = var.ring },
+    var.vm_template == null ? {} : { vmTemplate = var.vm_template },
     var.registration_token_operation == "None" ? {} : {
       registrationInfo = {
         expirationTime             = local.registration_token_expiry

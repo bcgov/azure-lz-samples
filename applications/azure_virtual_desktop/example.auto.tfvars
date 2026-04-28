@@ -5,8 +5,69 @@ virtual_network_resource_group_name = "e833c2-dev-networking"
 
 host_pools = {
   pooled_primary = {
-    name = "e833c2-avd-hostpool"
+    name                   = "e833c2-avd-hostpool"
+    validation_environment = false
+    public_network_access  = "Disabled"
+    private_endpoints = [
+      {
+        subnet_key        = "avd_private_endpoints"
+        subresource_names = ["connection"]
+      }
+    ]
   }
+
+  # validation_and_shortpath_example = {
+  #   name                             = "e833c2-avd-validation"
+  #   validation_environment           = true
+  #   public_network_access            = "Enabled"
+  #   public_udp                       = "Enabled" # RDP Shortpath for public networks (via STUN)
+  #   relay_udp                        = "Enabled" # RDP Shortpath for public networks (via TURN/Relay)
+  #   direct_udp                       = "Enabled"
+  #   managed_private_udp              = "Default"
+  #   allow_rdp_shortpath_with_private_link = "Disabled"
+  # }
+
+  # rdp_properties_example = {
+  #   name = "e833c2-avd-rdp-example"
+  #   rdp_properties = {
+  #     connections = {
+  #       credential_security_support_provider = "EnabledIfSupported"
+  #     }
+  #     session_behavior = {
+  #       video_playback_mode = "RdpEfficientWhenPossible"
+  #     }
+  #     device_redirection = {
+  #       audio_capture                             = true
+  #       audio_mode                                = "PlayOnLocalDevice"
+  #       cameras                                   = "*"
+  #       devices                                   = "DynamicDevices"
+  #       drives                                    = "DynamicDrives"
+  #       encode_redirected_video_capture           = true
+  #       keyboard_hook                             = "RemoteInFullScreen"
+  #       redirect_clipboard                        = true
+  #       redirect_com_ports                        = true
+  #       redirected_video_capture_encoding_quality = "MediumCompression"
+  #       redirect_location                         = true
+  #       redirect_printers                         = true
+  #       redirect_smart_cards                      = true
+  #       redirect_webauthn                         = true
+  #       usb_devices                               = "*"
+  #     }
+  #     display_settings = {
+  #       desktop_size_id                 = 2
+  #       desktop_height                  = 1080
+  #       desktop_scale_factor            = 150
+  #       desktop_width                   = 1920
+  #       dynamic_resolution              = true
+  #       maximize_to_current_displays    = true
+  #       screen_mode                     = "FullScreen"
+  #       selected_monitors               = "0,1"
+  #       single_monitor_in_windowed_mode = false
+  #       smart_sizing                    = true
+  #       use_multimon                    = true
+  #     }
+  #   }
+  # }
 
   # personal_example = {
   #   name                             = "db78da-avd-personal"
@@ -33,7 +94,8 @@ host_pools = {
 
 scaling_plans = {
   pooled_daytime = {
-    name = "sp-e833c2-avd-pooled"
+    name          = "sp-e833c2-avd-pooled"
+    exclusion_tag = "excludeFromScaling"
     host_pool_references = [
       {
         host_pool_key = "pooled_primary"
@@ -59,6 +121,26 @@ scaling_plans = {
         rampDownNotificationMessage    = "Sign out soon to allow planned scale-down."
         rampDownStopHostsWhen          = "ZeroSessions"
         offPeakStartTime               = { hour = 20, minute = 0 }
+        offPeakLoadBalancingAlgorithm  = "DepthFirst"
+      },
+      {
+        name                           = "weekend"
+        daysOfWeek                     = ["Saturday", "Sunday"]
+        rampUpStartTime                = { hour = 8, minute = 0 }
+        rampUpLoadBalancingAlgorithm   = "BreadthFirst"
+        rampUpMinimumHostsPct          = 10
+        rampUpCapacityThresholdPct     = 50
+        peakStartTime                  = { hour = 10, minute = 0 }
+        peakLoadBalancingAlgorithm     = "BreadthFirst"
+        rampDownStartTime              = { hour = 15, minute = 0 }
+        rampDownLoadBalancingAlgorithm = "DepthFirst"
+        rampDownMinimumHostsPct        = 0
+        rampDownCapacityThresholdPct   = 20
+        rampDownForceLogoffUsers       = false
+        rampDownWaitTimeMinutes        = 15
+        rampDownNotificationMessage    = "Weekend scale-down is about to begin."
+        rampDownStopHostsWhen          = "ZeroActiveSessions"
+        offPeakStartTime               = { hour = 18, minute = 0 }
         offPeakLoadBalancingAlgorithm  = "DepthFirst"
       }
     ]
@@ -89,6 +171,11 @@ subnets = {
     address_prefixes           = ["10.41.9.32/27"]
     network_security_group_key = "avd_private_endpoints"
   }
+
+  # avd_session_hosts = {
+  #   name             = "snet-avd-session-hosts"
+  #   address_prefixes = ["10.41.9.64/27"]
+  # }
 }
 
 ### Supporting resources
@@ -121,7 +208,23 @@ key_vaults = {
 workspaces = {
   primary = {
     name = "ws-e833c2-avd"
+    private_endpoints = [
+      {
+        subnet_key        = "avd_private_endpoints"
+        subresource_names = ["feed"]
+      }
+    ]
   }
+
+  # global_feed_discovery_example = {
+  #   name = "ws-e833c2-avd-global"
+  #   private_endpoints = [
+  #     {
+  #       subnet_key        = "avd_private_endpoints"
+  #       subresource_names = ["global"]
+  #     }
+  #   ]
+  # }
 }
 
 application_groups = {
@@ -131,7 +234,48 @@ application_groups = {
     host_pool_key = "pooled_primary"
     workspace_key = "primary"
   }
+
+  # remoteapp_with_assignments_example = {
+  #   name          = "rag-e833c2-avd-apps"
+  #   type          = "RailApplications"
+  #   host_pool_key = "pooled_primary"
+  #   workspace_key = "primary"
+  #   assignments = {
+  #     finance_users = {
+  #       principal_id         = "00000000-0000-0000-0000-000000000000"
+  #       principal_type       = "Group"
+  #       role_definition_name = "Desktop Virtualization User"
+  #     }
+  #   }
+  # }
 }
+
+### Session host example:
+### This module now supports Azure VM-based session hosts for standard-management host pools.
+### Keep the example commented until you have a dedicated subnet with outbound access to Microsoft Entra and AVD service endpoints.
+# session_hosts = {
+#   pooled_primary = {
+#     host_pool_key        = "pooled_primary"
+#     subnet_key           = "avd_session_hosts"
+#     instance_count       = 1
+#     vm_name_prefix       = "vm-e833c2-avdsh"
+#     computer_name_prefix = "avdsh"
+#     size                 = "Standard_D4ds_v4"
+#     # tags = { excludeFromScaling = "true" } # Optional: align with scaling_plans[*].exclusion_tag.
+#     vm_role_assignments = {
+#       avd_users = {
+#         principal_id         = "00000000-0000-0000-0000-000000000000"
+#         principal_type       = "Group"
+#         role_definition_name = "Virtual Machine User Login"
+#       }
+#       avd_admins = {
+#         principal_id         = "00000000-0000-0000-0000-000000000000"
+#         principal_type       = "Group"
+#         role_definition_name = "Virtual Machine Administrator Login"
+#       }
+#     }
+#   }
+# }
 
 ### Registration token rotation:
 ### Host pools ignore registrationInfo changes after creation to avoid token churn on every apply.

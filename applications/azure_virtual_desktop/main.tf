@@ -36,11 +36,22 @@ module "host_pools" {
   ]
 
   resource_group_id                         = azurerm_resource_group.avd_rg.id
+  resource_group_name                       = azurerm_resource_group.avd_rg.name
   location                                  = azurerm_resource_group.avd_rg.location
   tags                                      = var.tags
   host_pool_name                            = each.value.name
   friendly_name                             = each.value.friendly_name
   description                               = each.value.description
+  public_network_access                     = each.value.public_network_access
+  deployment_scope                          = each.value.deployment_scope
+  management_type                           = each.value.management_type
+  ring                                      = each.value.ring
+  vm_template                               = each.value.vm_template
+  allow_rdp_shortpath_with_private_link     = each.value.allow_rdp_shortpath_with_private_link
+  direct_udp                                = each.value.direct_udp
+  managed_private_udp                       = each.value.managed_private_udp
+  public_udp                                = each.value.public_udp
+  relay_udp                                 = each.value.relay_udp
   host_pool_type                            = each.value.host_pool_type
   load_balancer_type                        = each.value.load_balancer_type
   personal_desktop_assignment_type          = each.value.personal_desktop_assignment_type
@@ -55,6 +66,7 @@ module "host_pools" {
   agent_update_use_session_host_local_time  = each.value.agent_update.use_session_host_local_time
   agent_update_maintenance_window_time_zone = each.value.agent_update.maintenance_window_time_zone
   agent_update_maintenance_windows          = each.value.agent_update.maintenance_windows
+  private_endpoints                         = each.value.private_endpoints
 
   log_analytics_workspace_id = local.avd_log_analytics_workspace_id
   enable_diagnostics         = length(var.log_analytics_workspaces) > 0
@@ -110,10 +122,44 @@ module "workspaces" {
   friendly_name                 = try(each.value.friendly_name, null)
   description                   = try(each.value.description, null)
   public_network_access_enabled = each.value.public_network_access_enabled
+  private_endpoints             = local.workspace_private_endpoints[each.key]
   tags                          = var.tags
   log_analytics_workspace_id    = local.avd_log_analytics_workspace_id
   diagnostic_log_category_group = each.value.diagnostic_log_category_group
   enable_diagnostics            = length(var.log_analytics_workspaces) > 0
+}
+
+module "session_hosts" {
+  for_each = local.session_host_instances
+  source   = "./modules/session_host"
+
+  depends_on = [
+    module.host_pools,
+    module.networking,
+  ]
+
+  resource_group_name          = azurerm_resource_group.avd_rg.name
+  location                     = azurerm_resource_group.avd_rg.location
+  subnet_id                    = each.value.subnet_id
+  host_pool_id                 = each.value.host_pool_id
+  host_pool_registration_token = each.value.host_pool_registration_token
+  vm_name                      = each.value.vm_name
+  computer_name                = each.value.computer_name
+  size                         = each.value.size
+  join_type                    = each.value.join_type
+  admin_username               = each.value.admin_username
+  admin_password               = each.value.admin_password
+  license_type                 = each.value.license_type
+  os_disk_storage_account_type = each.value.os_disk_storage_account_type
+  patch_mode                   = each.value.patch_mode
+  enable_automatic_updates     = each.value.enable_automatic_updates
+  provision_vm_agent           = each.value.provision_vm_agent
+  secure_boot_enabled          = each.value.secure_boot_enabled
+  vtpm_enabled                 = each.value.vtpm_enabled
+  source_image_id              = each.value.source_image_id
+  source_image_reference       = each.value.source_image_reference
+  vm_role_assignments          = each.value.vm_role_assignments
+  tags                         = each.value.tags
 }
 
 module "application_groups" {
@@ -132,6 +178,7 @@ module "application_groups" {
   type                          = each.value.type
   friendly_name                 = try(each.value.friendly_name, null)
   description                   = try(each.value.description, null)
+  assignments                   = each.value.assignments
   tags                          = var.tags
   log_analytics_workspace_id    = local.avd_log_analytics_workspace_id
   diagnostic_log_category_group = each.value.diagnostic_log_category_group
@@ -158,6 +205,9 @@ module "scaling_plans" {
   location          = azurerm_resource_group.avd_rg.location
   tags              = var.tags
   scaling_plans     = local.scaling_plans
+
+  log_analytics_workspace_id = local.avd_log_analytics_workspace_id
+  enable_diagnostics         = length(var.log_analytics_workspaces) > 0
 }
 
 resource "azurerm_virtual_desktop_workspace_application_group_association" "this" {
