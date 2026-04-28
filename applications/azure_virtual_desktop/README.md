@@ -134,6 +134,45 @@ Session host (snet-avd-session-hosts)
 
 ---
 
+## Deployment Timing
+
+`terraform apply` completing successfully does **not** mean the environment is immediately ready for user connections. Several post-apply steps happen asynchronously on the session host VMs and the AVD control plane.
+
+### Timeline after first `apply`
+
+| Stage | Approximate elapsed time | What to observe |
+|---|---|---|
+| VM provisioned and extensions started | 0–5 min | VM shows `VM running` in Azure portal |
+| AADLoginForWindows extension completes | 2–8 min | Extension status `Succeeded` |
+| AVD agent installs and registers with host pool | 5–12 min | Session host appears in host pool with status `Unavailable`; `lastHeartBeat` timestamp is set; `sessionHostHealthCheckResults` is empty |
+| AVD agent completes health checks | 10–20 min | `sessionHostHealthCheckResults` populates; status transitions to `Available` |
+| FSLogix configuration applied via run command | Runs concurrently with above | No visible portal indicator; check run-command history on the VM |
+| Environment ready for user login | **~15–25 min after apply** | Session host status = `Available` in host pool |
+
+### How to verify readiness
+
+```bash
+# Show session host status (replace host pool / resource group names as appropriate)
+az rest --method GET \
+  --url "https://management.azure.com/subscriptions/<subscriptionId>/resourceGroups/<resourceGroup>/providers/Microsoft.DesktopVirtualization/hostPools/<hostPoolName>/sessionHosts/<vmName>?api-version=2024-08-08-preview" \
+  --query "properties.{status:status, lastHeartBeat:lastHeartBeat, healthChecks:sessionHostHealthCheckResults}"
+```
+
+The session host is ready for connections when:
+- `status` = `Available`
+- `sessionHostHealthCheckResults` is non-empty (all checks passed)
+
+### `Unavailable` with empty health check results
+
+If the session host shows `Unavailable` and `sessionHostHealthCheckResults` is an empty array (`[]`), the AVD agent has registered but has not yet completed its initial health check cycle. This is **normal immediately after first deployment** — wait 5–10 minutes and re-query. No remediation is needed.
+
+If the session host remains `Unavailable` for more than 30 minutes:
+1. Connect to the VM via Azure Bastion and run `Get-Service RDAgentBootLoader, RDAgent` — both should be `Running`.
+2. Check Event Viewer: `Applications and Services Logs > Microsoft > Windows > RemoteDesktopServices-RdpCoreTS`.
+3. Verify that the registration token has not expired (tokens are valid for `registration_token_expiry_hours`, default 2 hours). Re-run `terraform apply` to rotate a fresh token if needed.
+
+---
+
 ## Diagnostics
 
 The `manage_diagnostic_settings` flag controls whether this module creates Azure Monitor diagnostic settings. Set it to `false` when an Azure Policy DINE assignment already deploys diagnostic settings in the target subscription to avoid resource conflicts on `apply`.
@@ -233,7 +272,6 @@ This uses the Azure Monitor Agent (AMA) pipeline, which Microsoft recommends for
 | <a name="input_key_vaults"></a> [key\_vaults](#input\_key\_vaults) | (Optional) Key Vaults to create. Each vault gets a private endpoint, optional AVD local-admin secrets, and optional diagnostic forwarding. | <pre>map(object({<br/>    name                       = string<br/>    sku_name                   = optional(string, "standard")<br/>    enable_rbac_authorization  = optional(bool, true)<br/>    purge_protection_enabled   = optional(bool, true)<br/>    soft_delete_retention_days = optional(number, 90)<br/>    avd_local_admin_username   = optional(string, "avdadmin")<br/>    create_local_admin_secrets = optional(bool, false)<br/>    # Key from networking subnet_ids (created or existing) used for the private endpoint.<br/>    private_endpoint_subnet_key   = string<br/>    diagnostic_log_category_group = optional(string, "audit")<br/>  }))</pre> | `{}` | no |
 | <a name="input_location"></a> [location](#input\_location) | (Required) Azure region to deploy to. Changing this forces a new resource to be created. | `string` | n/a | yes |
 | <a name="input_log_analytics_workspaces"></a> [log\_analytics\_workspaces](#input\_log\_analytics\_workspaces) | (Optional) Log Analytics Workspaces to create. All other resources with diagnostics enabled will forward logs to the first workspace in this map unless a specific key is specified. | <pre>map(object({<br/>    name                          = string<br/>    sku                           = optional(string, "PerGB2018")<br/>    retention_in_days             = optional(number, 30)<br/>    daily_quota_gb                = optional(number, -1)<br/>    diagnostic_log_category_group = optional(string, "audit")<br/>  }))</pre> | `{}` | no |
-| <a name="input_manage_diagnostic_settings"></a> [manage\_diagnostic\_settings](#input\_manage\_diagnostic\_settings) | (Optional) When true, this module creates resource diagnostic settings. Set false when diagnostics are deployed by policy to avoid create/import conflicts. | `bool` | `true` | no |
 | <a name="input_network_security_groups"></a> [network\_security\_groups](#input\_network\_security\_groups) | (Optional) Network security groups to create in the AVD resource group for later subnet attachment. | <pre>map(object({<br/>    name = string<br/>    security_rules = optional(map(object({<br/>      name                         = optional(string)<br/>      priority                     = number<br/>      direction                    = string<br/>      access                       = string<br/>      protocol                     = string<br/>      description                  = optional(string)<br/>      source_port_range            = optional(string)<br/>      source_port_ranges           = optional(list(string))<br/>      destination_port_range       = optional(string)<br/>      destination_port_ranges      = optional(list(string))<br/>      source_address_prefix        = optional(string)<br/>      source_address_prefixes      = optional(list(string))<br/>      destination_address_prefix   = optional(string)<br/>      destination_address_prefixes = optional(list(string))<br/>    })), {})<br/>  }))</pre> | `{}` | no |
 | <a name="input_resource_group_name"></a> [resource\_group\_name](#input\_resource\_group\_name) | (Required) The name of the resource group in which to create the resources. | `string` | n/a | yes |
 | <a name="input_scaling_plans"></a> [scaling\_plans](#input\_scaling\_plans) | (Optional) Map of Azure Virtual Desktop scaling plans. Each plan references host pools by key from host\_pools. | <pre>map(object({<br/>    name                          = string<br/>    friendly_name                 = optional(string)<br/>    description                   = optional(string)<br/>    exclusion_tag                 = optional(string)<br/>    host_pool_type                = optional(string, "Pooled")<br/>    time_zone                     = optional(string, "UTC")<br/>    diagnostic_log_category_group = optional(string, "allLogs")<br/>    host_pool_references = optional(list(object({<br/>      host_pool_key = string<br/>      enabled       = optional(bool, true)<br/>    })), [])<br/>    schedules = optional(list(any), [])<br/>  }))</pre> | `{}` | no |
