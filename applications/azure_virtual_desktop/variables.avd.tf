@@ -351,6 +351,7 @@ variable "session_hosts" {
     enable_boot_diagnostics              = optional(bool, true)        # Managed boot diagnostics by default.
     boot_diagnostics_storage_account_uri = optional(string)            # Override with a specific storage account URI.
     extensions_time_budget               = optional(string, "PT1H30M") # ISO 8601 duration budget for all extensions.
+    enable_integrity_monitoring          = optional(bool, true)        # Guest attestation integrity monitoring for Trusted Launch VMs.
     patch_mode                           = optional(string, "AutomaticByOS")
     enable_automatic_updates             = optional(bool, true)
     provision_vm_agent                   = optional(bool, true)

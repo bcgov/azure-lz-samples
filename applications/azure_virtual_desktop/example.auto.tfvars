@@ -5,7 +5,10 @@ virtual_network_resource_group_name = "e833c2-dev-networking"
 
 host_pools = {
   pooled_primary = {
-    name                   = "e833c2-avd-hostpool"
+    name          = "e833c2-avd-hostpool"
+    friendly_name = "e833c2 Primary Host Pool"
+    # Cannot be changed to true while a host-pool private endpoint exists.
+    # To enable later: remove host pool private endpoint(s), update this to true, apply, then recreate endpoint(s).
     validation_environment = false
     public_network_access  = "Disabled"
     private_endpoints = [
@@ -95,6 +98,7 @@ host_pools = {
 scaling_plans = {
   pooled_daytime = {
     name          = "sp-e833c2-avd-pooled"
+    friendly_name = "e833c2 Daytime Scaling"
     exclusion_tag = "excludeFromScaling"
     host_pool_references = [
       {
@@ -276,7 +280,8 @@ key_vaults = {
 
 workspaces = {
   primary = {
-    name = "ws-e833c2-avd"
+    name          = "ws-e833c2-avd"
+    friendly_name = "e833c2 AVD Workspace"
     private_endpoints = [
       {
         subnet_key        = "avd_private_endpoints"
@@ -299,6 +304,7 @@ workspaces = {
 application_groups = {
   desktop = {
     name          = "dag-e833c2-avd-desktop"
+    friendly_name = "e833c2 Desktop Group"
     type          = "Desktop"
     host_pool_key = "pooled_primary"
     workspace_key = "primary"
@@ -382,6 +388,7 @@ session_hosts = {
 #
 #   ### Extensions
 #   extensions_time_budget = "PT2H"               # ISO 8601. Increase if large images or slow storage cause extension timeouts.
+#   enable_integrity_monitoring = true             # Enable Guest Attestation integrity monitoring (recommended for Trusted Launch).
 #
 #   ### Admin credentials
 #   admin_username = "avdadmin"

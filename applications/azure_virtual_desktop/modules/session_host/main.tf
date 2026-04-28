@@ -160,6 +160,27 @@ resource "azurerm_virtual_machine_extension" "avd_registration" {
   }
 }
 
+resource "azurerm_virtual_machine_extension" "integrity_monitoring" {
+  count = var.enable_integrity_monitoring && var.secure_boot_enabled && var.vtpm_enabled ? 1 : 0
+
+  name                       = "GuestAttestation"
+  virtual_machine_id         = azurerm_windows_virtual_machine.this.id
+  publisher                  = "Microsoft.Azure.Security.WindowsAttestation"
+  type                       = "GuestAttestation"
+  type_handler_version       = "1.0"
+  automatic_upgrade_enabled  = true
+  auto_upgrade_minor_version = true
+  tags                       = var.tags
+
+  depends_on = [
+    azurerm_virtual_machine_extension.aad_login,
+  ]
+
+  lifecycle {
+    ignore_changes = [tags]
+  }
+}
+
 resource "azurerm_role_assignment" "vm_login" {
   for_each = var.vm_role_assignments
 

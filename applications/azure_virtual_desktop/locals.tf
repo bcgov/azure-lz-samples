@@ -190,6 +190,7 @@ locals {
     enable_boot_diagnostics              = true
     boot_diagnostics_storage_account_uri = null
     extensions_time_budget               = "PT1H30M"
+    enable_integrity_monitoring          = true
     source_image_reference = {
       publisher = "MicrosoftWindowsDesktop"
       offer     = "office-365"
@@ -227,6 +228,7 @@ locals {
         enable_boot_diagnostics              = coalesce(try(session_host.enable_boot_diagnostics, null), local.session_host_defaults.enable_boot_diagnostics)
         boot_diagnostics_storage_account_uri = try(session_host.boot_diagnostics_storage_account_uri, local.session_host_defaults.boot_diagnostics_storage_account_uri)
         extensions_time_budget               = coalesce(try(session_host.extensions_time_budget, null), local.session_host_defaults.extensions_time_budget)
+        enable_integrity_monitoring          = coalesce(try(session_host.enable_integrity_monitoring, null), local.session_host_defaults.enable_integrity_monitoring)
         source_image_id                      = try(session_host.source_image_id, null)
         source_image_reference = try(session_host.source_image_reference, null) != null ? {
           publisher = session_host.source_image_reference.publisher

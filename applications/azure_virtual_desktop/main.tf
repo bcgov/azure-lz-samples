@@ -158,6 +158,7 @@ module "session_hosts" {
   enable_boot_diagnostics              = each.value.enable_boot_diagnostics
   boot_diagnostics_storage_account_uri = each.value.boot_diagnostics_storage_account_uri
   extensions_time_budget               = each.value.extensions_time_budget
+  enable_integrity_monitoring          = each.value.enable_integrity_monitoring
   patch_mode                           = each.value.patch_mode
   enable_automatic_updates             = each.value.enable_automatic_updates
   provision_vm_agent                   = each.value.provision_vm_agent

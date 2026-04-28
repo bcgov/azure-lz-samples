@@ -24,6 +24,7 @@ No modules.
 | [azurerm_role_assignment.vm_login](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/role_assignment) | resource |
 | [azurerm_virtual_machine_extension.aad_login](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/virtual_machine_extension) | resource |
 | [azurerm_virtual_machine_extension.avd_registration](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/virtual_machine_extension) | resource |
+| [azurerm_virtual_machine_extension.integrity_monitoring](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/virtual_machine_extension) | resource |
 | [azurerm_windows_virtual_machine.this](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/windows_virtual_machine) | resource |
 | [random_password.admin](https://registry.terraform.io/providers/hashicorp/random/latest/docs/resources/password) | resource |
 
@@ -40,6 +41,7 @@ No modules.
 | <a name="input_diff_disk_settings"></a> [diff\_disk\_settings](#input\_diff\_disk\_settings) | (Optional) Ephemeral OS disk settings. When set, the OS disk is placed on the VM cache or NVMe disk for lower latency. Not compatible with os\_disk\_size\_gb. | <pre>object({<br/>    option    = string           # CacheDisk or NvmeDisk<br/>    placement = optional(string) # CacheDisk or ResourceDisk<br/>  })</pre> | `null` | no |
 | <a name="input_enable_automatic_updates"></a> [enable\_automatic\_updates](#input\_enable\_automatic\_updates) | (Optional) Whether automatic Windows updates are enabled. | `bool` | `true` | no |
 | <a name="input_enable_boot_diagnostics"></a> [enable\_boot\_diagnostics](#input\_enable\_boot\_diagnostics) | (Optional) Whether boot diagnostics are enabled on the VM. | `bool` | `true` | no |
+| <a name="input_enable_integrity_monitoring"></a> [enable\_integrity\_monitoring](#input\_enable\_integrity\_monitoring) | (Optional) Whether to enable guest attestation integrity monitoring on Trusted Launch session hosts. | `bool` | `true` | no |
 | <a name="input_extensions_time_budget"></a> [extensions\_time\_budget](#input\_extensions\_time\_budget) | (Optional) Duration budget for all VM extensions, in ISO 8601 format (e.g. PT1H30M). | `string` | `"PT1H30M"` | no |
 | <a name="input_host_pool_id"></a> [host\_pool\_id](#input\_host\_pool\_id) | (Required) Host pool ID to which the session host belongs. | `string` | n/a | yes |
 | <a name="input_host_pool_registration_token"></a> [host\_pool\_registration\_token](#input\_host\_pool\_registration\_token) | (Required) Registration token used to register the VM with the AVD host pool. | `string` | n/a | yes |

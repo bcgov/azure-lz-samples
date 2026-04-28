@@ -165,6 +165,12 @@ variable "extensions_time_budget" {
   default     = "PT1H30M"
 }
 
+variable "enable_integrity_monitoring" {
+  description = "(Optional) Whether to enable guest attestation integrity monitoring on Trusted Launch session hosts."
+  type        = bool
+  default     = true
+}
+
 variable "vm_role_assignments" {
   description = "(Optional) Azure RBAC role assignments that control sign-in access to the VM."
   type = map(object({
