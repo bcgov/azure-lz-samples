@@ -226,7 +226,7 @@ resource "azurerm_role_assignment" "fslogix_smb_session_hosts" {
 }
 
 resource "azurerm_monitor_data_collection_rule" "session_hosts" {
-  count = local.avd_log_analytics_workspace_id != null && length(local.session_host_instances) > 0 ? 1 : 0
+  count = length(var.log_analytics_workspaces) > 0 && length(local.session_host_instances) > 0 ? 1 : 0
 
   name                = "dcr-${substr(replace(lower(var.resource_group_name), "_", "-"), 0, 50)}-avd-sh"
   resource_group_name = azurerm_resource_group.avd_rg.name
@@ -279,7 +279,7 @@ resource "azurerm_monitor_data_collection_rule" "session_hosts" {
 }
 
 resource "azurerm_monitor_data_collection_rule_association" "session_hosts" {
-  for_each = local.avd_log_analytics_workspace_id != null ? local.session_host_instances : {}
+  for_each = length(var.log_analytics_workspaces) > 0 ? local.session_host_instances : {}
 
   name                    = "dcra-${replace(each.key, ".", "-")}"
   target_resource_id      = module.session_hosts[each.key].id

@@ -1,5 +1,52 @@
 # azure_virtual_desktop
 
+## Overview
+
+This module deploys an Azure Virtual Desktop environment into an existing hub-spoke or vWAN-connected virtual network. Two example configurations are provided:
+
+| File | Access model | Host pool | Workspace feed |
+|---|---|---|---|
+| `example.public.tfvars` | Option 1 — public-capable | `EnabledForClientsOnly` | Public (no private endpoint required) |
+| `example.private.tfvars` | Option 2 — private-only | `Disabled` + private endpoint | Private endpoint only |
+
+---
+
+## Key Vault
+
+Key Vault is **optional**. It is only needed if you want to store the session host local administrator credentials (`AVD-Local-Admin-Username` / `AVD-Local-Admin-Password`) as retrievable Key Vault secrets.
+
+Omit the block entirely to skip Key Vault creation:
+
+```hcl
+key_vaults = {}
+```
+
+### `create_local_admin_secrets`
+
+| Value | Behaviour |
+|---|---|
+| `false` (default) | The vault is provisioned but no secrets are written. The local admin password is auto-generated and stored only in Terraform state. The vault provides no active value. |
+| `true` | Terraform writes `AVD-Local-Admin-Username` and `AVD-Local-Admin-Password` to the vault. **A private runner is required** (see below). |
+
+### Private runner requirement
+
+The vault is always deployed with `public_network_access_enabled = false`, regardless of the deployment option (public or private). When `create_local_admin_secrets = true`, Terraform must reach the vault's private endpoint to write secrets. This means:
+
+- The pipeline **must** run from inside the private network — a self-hosted GitHub Actions runner, Azure DevOps self-hosted agent, or a Bastion-connected jump host.
+- The runner must have private DNS resolution for `privatelink.vaultcore.azure.net` and network line-of-sight to the `avd_private_endpoints` subnet.
+- Public GitHub-hosted runners (`ubuntu-latest`, etc.) will fail at secret creation with a network access error.
+
+> In the **private-only** option (`example.private.tfvars`) this constraint extends to all Key Vault operations — there is no public fallback path for reads either.
+
+### When is Key Vault justified?
+
+- You require a break-glass / emergency-access path to VMs via local credentials outside of Entra ID.
+- You want to rotate or audit the local admin password independently of Terraform state.
+
+End-user AVD authentication uses Entra ID SSO (`enablerdsaadauth:i:1`) and does not depend on the local admin account.
+
+---
+
 <!-- BEGIN_TF_DOCS -->
 ## Requirements
 
