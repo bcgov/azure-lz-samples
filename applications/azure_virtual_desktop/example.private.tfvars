@@ -232,13 +232,13 @@ application_groups = {
     #   recommended — speeds up role assignment creation).
     # role_definition_name: defaults to "Desktop Virtualization User" if omitted.
     # ---------------------------------------------------------------------------
-    # assignments = {
-    #   avd_users = {
-    #     principal_id   = "<entra-group-object-id>"
-    #     principal_type = "Group"
-    #     # role_definition_name = "Desktop Virtualization User" # default
-    #   }
-    # }
+    assignments = {
+      avd_users = {
+        principal_id         = "26c9d2b5-dc78-460f-9b5c-4ae442ab5697" # PIM_DO_PuC_Dev_Infra_R_RE
+        principal_type       = "Group"
+        role_definition_name = "Desktop Virtualization User" # default
+      }
+    }
   }
 }
 

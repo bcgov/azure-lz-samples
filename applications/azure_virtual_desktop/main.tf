@@ -138,18 +138,18 @@ module "session_hosts" {
     module.networking,
   ]
 
-  resource_group_name          = azurerm_resource_group.avd_rg.name
-  location                     = azurerm_resource_group.avd_rg.location
-  subnet_id                    = each.value.subnet_id
-  host_pool_id                 = each.value.host_pool_id
-  host_pool_registration_token = each.value.host_pool_registration_token
-  vm_name                      = each.value.vm_name
-  computer_name                = each.value.computer_name
-  size                         = each.value.size
-  join_type                    = each.value.join_type
-  admin_username               = each.value.admin_username
-  admin_password               = each.value.admin_password
-  license_type                 = each.value.license_type
+  resource_group_name                  = azurerm_resource_group.avd_rg.name
+  location                             = azurerm_resource_group.avd_rg.location
+  subnet_id                            = each.value.subnet_id
+  host_pool_id                         = each.value.host_pool_id
+  host_pool_registration_token         = each.value.host_pool_registration_token
+  vm_name                              = each.value.vm_name
+  computer_name                        = each.value.computer_name
+  size                                 = each.value.size
+  join_type                            = each.value.join_type
+  admin_username                       = each.value.admin_username
+  admin_password                       = each.value.admin_password
+  license_type                         = each.value.license_type
   os_disk_storage_account_type         = each.value.os_disk_storage_account_type
   os_disk_size_gb                      = each.value.os_disk_size_gb
   diff_disk_settings                   = each.value.diff_disk_settings
