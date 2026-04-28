@@ -38,3 +38,8 @@ output "vm_role_assignment_ids" {
   description = "Role assignment IDs created for session host VM sign-in access."
   value       = { for key, value in azurerm_role_assignment.vm_login : key => value.id }
 }
+
+output "principal_id" {
+  description = "System-assigned managed identity principal ID of the session host VM. Used to grant storage RBAC for FSLogix."
+  value       = azurerm_windows_virtual_machine.this.identity[0].principal_id
+}

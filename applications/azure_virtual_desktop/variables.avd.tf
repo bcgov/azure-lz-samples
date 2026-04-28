@@ -370,6 +370,9 @@ variable "session_hosts" {
       role_definition_name = optional(string, "Virtual Machine User Login")
     })), {})
     tags = optional(map(string), {})
+    # FSLogix: override profile share paths per session host group.
+    # When null, the root fslogix_storage module share path is used (if fslogix_storage is set).
+    fslogix_profile_share_paths = optional(list(string))
   }))
   default = {}
 
@@ -427,5 +430,35 @@ variable "session_hosts" {
       !(try(session_host.source_image_id, null) != null && try(session_host.source_image_reference, null) != null)
     ])
     error_message = "Each session_hosts entry can set either source_image_id or source_image_reference, but not both."
+  }
+}
+
+variable "fslogix_storage" {
+  description = "(Optional) FSLogix profile storage configuration. When set, an Azure Files account with Entra Kerberos authentication is provisioned and session hosts are configured to use it for profile containers. Leave null to skip FSLogix storage deployment."
+  type = object({
+    name                          = string # Storage account name (3-24 lowercase alphanumeric).
+    private_endpoint_subnet_key   = string # Key from subnets or existing_subnet_ids for the file private endpoint.
+    account_tier                  = optional(string, "Premium")
+    account_replication_type      = optional(string, "ZRS")
+    share_name                    = optional(string, "profiles")
+    share_quota_gb                = optional(number, 1024)
+    smb_contributor_principal_ids = optional(list(string), []) # Additional Entra principal IDs (users/groups).
+    diagnostic_log_category_group = optional(string, "allLogs")
+  })
+  default = null
+
+  validation {
+    condition     = var.fslogix_storage == null || can(regex("^[a-z0-9]{3,24}$", var.fslogix_storage.name))
+    error_message = "fslogix_storage.name must be 3-24 lowercase alphanumeric characters."
+  }
+
+  validation {
+    condition     = var.fslogix_storage == null || contains(["Standard", "Premium"], var.fslogix_storage.account_tier)
+    error_message = "fslogix_storage.account_tier must be Standard or Premium."
+  }
+
+  validation {
+    condition     = var.fslogix_storage == null || (contains(keys(var.subnets), var.fslogix_storage.private_endpoint_subnet_key) || contains(keys(var.existing_subnet_ids), var.fslogix_storage.private_endpoint_subnet_key))
+    error_message = "fslogix_storage.private_endpoint_subnet_key must reference a key from subnets or existing_subnet_ids."
   }
 }

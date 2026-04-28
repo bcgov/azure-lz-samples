@@ -189,3 +189,66 @@ resource "azurerm_role_assignment" "vm_login" {
   principal_id         = each.value.principal_id
   principal_type       = try(each.value.principal_type, null)
 }
+
+# ---------------------------------------------------------------------------
+# FSLogix profile setup
+# Runs once after the VM is provisioned. Downloads and installs the FSLogix
+# agent, then writes the registry keys needed for profile containers.
+# Cloud Kerberos (CloudKerberosTicketRetrievalEnabled) is enabled so that
+# Entra-joined VMs can authenticate to Azure Files without AD DS.
+#
+# lifecycle ignore_changes prevents re-execution when unrelated plan changes
+# (e.g. tag updates) would otherwise trigger the run command.
+# ---------------------------------------------------------------------------
+locals {
+  fslogix_vhd_locations = join("\n", [for p in var.fslogix_profile_share_paths : "    '${p}'"])
+
+  fslogix_setup_script = length(var.fslogix_profile_share_paths) == 0 ? null : <<-EOT
+    $ProgressPreference = 'SilentlyContinue'
+    [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
+
+    # ---------- Install FSLogix ----------
+    $zipPath  = Join-Path $env:TEMP 'FSLogixApps.zip'
+    $exPath   = Join-Path $env:TEMP 'FSLogix'
+    Invoke-WebRequest -Uri 'https://aka.ms/fslogix_download' -OutFile $zipPath
+    Expand-Archive -Path $zipPath -DestinationPath $exPath -Force
+    $installer = Get-ChildItem -Path $exPath -Filter 'FSLogixAppsSetup.exe' -Recurse | Select-Object -First 1
+    Start-Process $installer.FullName -ArgumentList '/install /quiet /norestart' -Wait -NoNewWindow
+
+    # ---------- Configure profile container ----------
+    $regPath = 'HKLM:\SOFTWARE\FSLogix\Profiles'
+    New-Item -Path $regPath -Force | Out-Null
+    Set-ItemProperty -Path $regPath -Name 'Enabled'                              -Value 1     -Type DWord
+    Set-ItemProperty -Path $regPath -Name 'VHDLocations'                         -Value @(${local.fslogix_vhd_locations}) -Type MultiString
+    Set-ItemProperty -Path $regPath -Name 'DeleteLocalProfileWhenVHDShouldApply' -Value 1     -Type DWord
+    Set-ItemProperty -Path $regPath -Name 'FlipFlopProfileDirectoryName'         -Value 1     -Type DWord
+    Set-ItemProperty -Path $regPath -Name 'SizeInMBs'                            -Value 30000 -Type DWord
+    Set-ItemProperty -Path $regPath -Name 'VolumeType'                           -Value 'VHDX' -Type String
+
+    # Enable Cloud Kerberos so Entra-joined VMs authenticate to Azure Files.
+    Set-ItemProperty -Path $regPath -Name 'CloudKerberosTicketRetrievalEnabled'  -Value 1     -Type DWord
+  EOT
+}
+
+resource "azurerm_virtual_machine_run_command" "fslogix_setup" {
+  count = length(var.fslogix_profile_share_paths) > 0 ? 1 : 0
+
+  name               = "FSLogixSetup"
+  location           = var.location
+  virtual_machine_id = azurerm_windows_virtual_machine.this.id
+  tags               = var.tags
+
+  source {
+    script = local.fslogix_setup_script
+  }
+
+  depends_on = [
+    azurerm_virtual_machine_extension.avd_registration,
+  ]
+
+  lifecycle {
+    # Re-running the command is a no-op (idempotent registry writes) but
+    # ignore_changes avoids unnecessary plan noise after initial deployment.
+    ignore_changes = [source, tags]
+  }
+}

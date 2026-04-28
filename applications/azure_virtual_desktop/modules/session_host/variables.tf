@@ -171,6 +171,12 @@ variable "enable_integrity_monitoring" {
   default     = true
 }
 
+variable "fslogix_profile_share_paths" {
+  description = "(Optional) List of UNC paths for FSLogix profile containers (e.g. ['\\\\\\\\account.file.core.windows.net\\\\profiles']). When non-empty, FSLogix is installed and configured on the session host via a VM run command."
+  type        = list(string)
+  default     = []
+}
+
 variable "vm_role_assignments" {
   description = "(Optional) Azure RBAC role assignments that control sign-in access to the VM."
   type = map(object({

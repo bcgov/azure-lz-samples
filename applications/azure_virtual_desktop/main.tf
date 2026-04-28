@@ -167,7 +167,62 @@ module "session_hosts" {
   source_image_id                      = each.value.source_image_id
   source_image_reference               = each.value.source_image_reference
   vm_role_assignments                  = each.value.vm_role_assignments
-  tags                                 = each.value.tags
+  # Resolve share paths: prefer explicit per-group override, otherwise use the
+  # root fslogix_storage module output (if the module is enabled).
+  fslogix_profile_share_paths = each.value.fslogix_profile_share_paths != null ? each.value.fslogix_profile_share_paths : (
+    var.fslogix_storage != null ? [module.fslogix_storage[0].profile_share_path] : []
+  )
+  tags = each.value.tags
+}
+
+# ---------------------------------------------------------------------------
+# FSLogix profile storage
+# Creates an Azure Files account with Entra Kerberos auth, a profiles share,
+# a private endpoint, and RBAC for session host VM identities.
+# ---------------------------------------------------------------------------
+module "fslogix_storage" {
+  count  = var.fslogix_storage != null ? 1 : 0
+  source = "./modules/fslogix_storage"
+
+  depends_on = [
+    module.networking,
+  ]
+
+  name                       = var.fslogix_storage.name
+  location                   = azurerm_resource_group.avd_rg.location
+  resource_group_name        = azurerm_resource_group.avd_rg.name
+  tags                       = var.tags
+  account_tier               = var.fslogix_storage.account_tier
+  account_replication_type   = var.fslogix_storage.account_replication_type
+  share_name                 = var.fslogix_storage.share_name
+  share_quota_gb             = var.fslogix_storage.share_quota_gb
+  private_endpoint_subnet_id = contains(keys(var.subnets), var.fslogix_storage.private_endpoint_subnet_key) ? module.networking.subnet_ids[var.fslogix_storage.private_endpoint_subnet_key] : var.existing_subnet_ids[var.fslogix_storage.private_endpoint_subnet_key]
+
+  # Only additional principals (e.g. user/group IDs) are passed here.
+  # Session host VM identities are assigned separately below to avoid a
+  # circular dependency (session_hosts → fslogix_storage for share path).
+  smb_contributor_principal_ids = var.fslogix_storage.smb_contributor_principal_ids
+
+  log_analytics_workspace_id    = local.avd_log_analytics_workspace_id
+  enable_diagnostics            = length(var.log_analytics_workspaces) > 0
+  diagnostic_log_category_group = var.fslogix_storage.diagnostic_log_category_group
+}
+
+# Storage File Data SMB Share Contributor for each session host VM identity.
+# Kept separate from the fslogix_storage module to avoid a circular reference:
+#   session_hosts depends on fslogix_storage (share path) but fslogix_storage
+#   must not depend on session_hosts (principal IDs).
+resource "azurerm_role_assignment" "fslogix_smb_session_hosts" {
+  for_each = var.fslogix_storage != null ? local.session_host_instances : {}
+
+  scope                = module.fslogix_storage[0].id
+  role_definition_name = "Storage File Data SMB Share Contributor"
+  principal_id         = module.session_hosts[each.key].principal_id
+
+  depends_on = [
+    module.fslogix_storage,
+    module.session_hosts,
+  ]
 }
 
 resource "azurerm_monitor_data_collection_rule" "session_hosts" {

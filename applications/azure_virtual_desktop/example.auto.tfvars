@@ -413,3 +413,21 @@ session_hosts = {
 ### Host pools ignore registrationInfo changes after creation to avoid token churn on every apply.
 ### To force a new token for a single host pool, run:
 ### terraform apply -replace='module.host_pools["pooled_primary"].azapi_resource.host_pool'
+
+### FSLogix profile storage
+### Provisions a Premium ZRS Azure Files account with Entra Kerberos auth,
+### a private endpoint on the AVD private-endpoint subnet, and
+### Storage File Data SMB Share Contributor for each session host VM identity.
+### Session hosts are automatically configured via a VM run command on first apply.
+fslogix_storage = {
+  name                        = "stfslogixe833c2avd" # 3-24 lowercase alphanumeric; globally unique.
+  private_endpoint_subnet_key = "avd_private_endpoints"
+  account_tier                = "Premium"
+  account_replication_type    = "ZRS"
+  share_name                  = "profiles"
+  share_quota_gb              = 1024
+
+  # Optional: add Entra user/group object IDs for SMB Share Elevated Contributor
+  # (required for NTFS permission management on the share). Leave empty for VM-only access.
+  # smb_contributor_principal_ids = ["<group-or-user-object-id>"]
+}

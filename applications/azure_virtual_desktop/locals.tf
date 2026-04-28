@@ -199,6 +199,8 @@ locals {
     }
     vm_role_assignments = {}
     tags                = {}
+    # FSLogix share paths default to null; resolved at instance projection time.
+    fslogix_profile_share_paths = null
   }
 
   session_host_instances = length(var.session_hosts) == 0 ? {} : merge([
@@ -238,6 +240,9 @@ locals {
         } : local.session_host_defaults.source_image_reference
         vm_role_assignments = coalesce(try(session_host.vm_role_assignments, null), local.session_host_defaults.vm_role_assignments)
         tags                = merge(var.tags == null ? {} : var.tags, coalesce(try(session_host.tags, null), local.session_host_defaults.tags))
+        # Optional per-group FSLogix share path override. When null, the root
+        # fslogix_storage module share path is used in main.tf.
+        fslogix_profile_share_paths = try(session_host.fslogix_profile_share_paths, null)
       }
     }
   ]...)

@@ -25,6 +25,7 @@ No modules.
 | [azurerm_virtual_machine_extension.aad_login](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/virtual_machine_extension) | resource |
 | [azurerm_virtual_machine_extension.avd_registration](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/virtual_machine_extension) | resource |
 | [azurerm_virtual_machine_extension.integrity_monitoring](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/virtual_machine_extension) | resource |
+| [azurerm_virtual_machine_run_command.fslogix_setup](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/virtual_machine_run_command) | resource |
 | [azurerm_windows_virtual_machine.this](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/windows_virtual_machine) | resource |
 | [random_password.admin](https://registry.terraform.io/providers/hashicorp/random/latest/docs/resources/password) | resource |
 
@@ -43,6 +44,7 @@ No modules.
 | <a name="input_enable_boot_diagnostics"></a> [enable\_boot\_diagnostics](#input\_enable\_boot\_diagnostics) | (Optional) Whether boot diagnostics are enabled on the VM. | `bool` | `true` | no |
 | <a name="input_enable_integrity_monitoring"></a> [enable\_integrity\_monitoring](#input\_enable\_integrity\_monitoring) | (Optional) Whether to enable guest attestation integrity monitoring on Trusted Launch session hosts. | `bool` | `true` | no |
 | <a name="input_extensions_time_budget"></a> [extensions\_time\_budget](#input\_extensions\_time\_budget) | (Optional) Duration budget for all VM extensions, in ISO 8601 format (e.g. PT1H30M). | `string` | `"PT1H30M"` | no |
+| <a name="input_fslogix_profile_share_paths"></a> [fslogix\_profile\_share\_paths](#input\_fslogix\_profile\_share\_paths) | (Optional) List of UNC paths for FSLogix profile containers (e.g. ['\\\\account.file.core.windows.net\\profiles']). When non-empty, FSLogix is installed and configured on the session host via a VM run command. | `list(string)` | `[]` | no |
 | <a name="input_host_pool_id"></a> [host\_pool\_id](#input\_host\_pool\_id) | (Required) Host pool ID to which the session host belongs. | `string` | n/a | yes |
 | <a name="input_host_pool_registration_token"></a> [host\_pool\_registration\_token](#input\_host\_pool\_registration\_token) | (Required) Registration token used to register the VM with the AVD host pool. | `string` | n/a | yes |
 | <a name="input_join_type"></a> [join\_type](#input\_join\_type) | (Required) Session host join type. Currently only MicrosoftEntraJoined is supported. | `string` | n/a | yes |
@@ -73,6 +75,7 @@ No modules.
 | <a name="output_id"></a> [id](#output\_id) | Resource ID of the session host VM. |
 | <a name="output_name"></a> [name](#output\_name) | Name of the session host VM. |
 | <a name="output_network_interface_id"></a> [network\_interface\_id](#output\_network\_interface\_id) | Network interface ID for the session host VM. |
+| <a name="output_principal_id"></a> [principal\_id](#output\_principal\_id) | System-assigned managed identity principal ID of the session host VM. Used to grant storage RBAC for FSLogix. |
 | <a name="output_private_ip_address"></a> [private\_ip\_address](#output\_private\_ip\_address) | Primary private IP address of the session host VM. |
 | <a name="output_vm_role_assignment_ids"></a> [vm\_role\_assignment\_ids](#output\_vm\_role\_assignment\_ids) | Role assignment IDs created for session host VM sign-in access. |
 <!-- END_TF_DOCS -->
