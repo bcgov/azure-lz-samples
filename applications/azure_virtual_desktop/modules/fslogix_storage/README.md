@@ -21,6 +21,7 @@ No modules.
 | Name | Type |
 |------|------|
 | [azapi_resource.diagnostics](https://registry.terraform.io/providers/Azure/azapi/latest/docs/resources/resource) | resource |
+| [azapi_resource.diagnostics_file_service](https://registry.terraform.io/providers/Azure/azapi/latest/docs/resources/resource) | resource |
 | [azapi_update_resource.entra_kerberos](https://registry.terraform.io/providers/Azure/azapi/latest/docs/resources/update_resource) | resource |
 | [azurerm_private_endpoint.this](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/private_endpoint) | resource |
 | [azurerm_role_assignment.smb_contributor](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/role_assignment) | resource |

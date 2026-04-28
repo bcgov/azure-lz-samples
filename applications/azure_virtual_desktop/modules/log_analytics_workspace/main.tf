@@ -25,6 +25,7 @@ resource "azurerm_log_analytics_workspace" "this" {
 
 # The workspace sends its own audit/operational logs to itself.
 resource "azapi_resource" "diagnostics" {
+  for_each  = var.enable_diagnostics ? { enabled = true } : {}
   type      = "Microsoft.Insights/diagnosticSettings@2021-05-01-preview"
   name      = "diag-${var.name}"
   parent_id = azurerm_log_analytics_workspace.this.id
@@ -41,6 +42,9 @@ resource "azapi_resource" "diagnostics" {
             days    = 0
           }
         },
+        # Explicitly disable the complementary category group. Without this entry
+        # Azure implicitly surfaces both allLogs and audit as enabled in the portal
+        # even when only one is intentionally configured.
         {
           categoryGroup = var.diagnostic_log_category_group == "allLogs" ? "audit" : "allLogs"
           enabled       = false

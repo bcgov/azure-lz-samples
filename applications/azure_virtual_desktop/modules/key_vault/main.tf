@@ -122,6 +122,9 @@ resource "azapi_resource" "diagnostics" {
             days    = 0
           }
         },
+        # Explicitly disable the complementary category group. Without this entry
+        # Azure implicitly surfaces both allLogs and audit as enabled in the portal
+        # even when only one is intentionally configured.
         {
           categoryGroup = var.diagnostic_log_category_group == "allLogs" ? "audit" : "allLogs"
           enabled       = false

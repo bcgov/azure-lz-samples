@@ -29,6 +29,7 @@ No modules.
 |------|-------------|------|---------|:--------:|
 | <a name="input_daily_quota_gb"></a> [daily\_quota\_gb](#input\_daily\_quota\_gb) | (Optional) Daily ingestion quota in GB. Use -1 to disable the quota. Defaults to -1. | `number` | `-1` | no |
 | <a name="input_diagnostic_log_category_group"></a> [diagnostic\_log\_category\_group](#input\_diagnostic\_log\_category\_group) | (Optional) Diagnostic log category group for self-diagnostics. Must be 'audit' or 'allLogs'. Defaults to 'audit'. | `string` | `"audit"` | no |
+| <a name="input_enable_diagnostics"></a> [enable\_diagnostics](#input\_enable\_diagnostics) | (Optional) When true, diagnostic settings are created for the workspace. | `bool` | `true` | no |
 | <a name="input_location"></a> [location](#input\_location) | (Required) Azure region. | `string` | n/a | yes |
 | <a name="input_name"></a> [name](#input\_name) | (Required) Log Analytics Workspace name. | `string` | n/a | yes |
 | <a name="input_resource_group_name"></a> [resource\_group\_name](#input\_resource\_group\_name) | (Required) Resource group name. | `string` | n/a | yes |

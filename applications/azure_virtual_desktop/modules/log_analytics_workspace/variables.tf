@@ -57,3 +57,9 @@ variable "diagnostic_log_category_group" {
     error_message = "diagnostic_log_category_group must be 'audit' or 'allLogs'."
   }
 }
+
+variable "enable_diagnostics" {
+  description = "(Optional) When true, diagnostic settings are created for the workspace."
+  type        = bool
+  default     = true
+}

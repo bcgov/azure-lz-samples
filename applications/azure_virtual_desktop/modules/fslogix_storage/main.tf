@@ -99,7 +99,13 @@ resource "azurerm_role_assignment" "smb_contributor" {
 }
 
 # ---------------------------------------------------------------------------
-# Diagnostics — mirrors the key_vault module pattern.
+# Diagnostics — storage accounts expose two separate diagnostic targets:
+#   1. The storage account resource itself — supports metrics only (no log
+#      categories). Transaction metric captures account-level throughput.
+#   2. The file service endpoint (fileServices/default) — supports both
+#      metrics and log categories (StorageRead/StorageWrite/StorageDelete
+#      via allLogs). This is where SMB access events for FSLogix profile
+#      containers are emitted and must be enabled for access auditing.
 # ---------------------------------------------------------------------------
 resource "azapi_resource" "diagnostics" {
   for_each  = var.enable_diagnostics ? { enabled = var.log_analytics_workspace_id } : {}
@@ -110,6 +116,43 @@ resource "azapi_resource" "diagnostics" {
   body = {
     properties = {
       workspaceId = each.value
+      metrics = [
+        {
+          category = "Transaction"
+          enabled  = true
+          retentionPolicy = {
+            enabled = false
+            days    = 0
+          }
+        }
+      ]
+    }
+  }
+}
+
+# File service level diagnostic settings. Log categories (StorageRead,
+# StorageWrite, StorageDelete) are only available on the file service endpoint,
+# not on the storage account resource itself. This captures SMB operations
+# against the FSLogix profiles share for access auditing.
+resource "azapi_resource" "diagnostics_file_service" {
+  for_each  = var.enable_diagnostics ? { enabled = var.log_analytics_workspace_id } : {}
+  type      = "Microsoft.Insights/diagnosticSettings@2021-05-01-preview"
+  name      = "diag-${var.name}-filesvc"
+  parent_id = "${azurerm_storage_account.this.id}/fileServices/default"
+
+  body = {
+    properties = {
+      workspaceId = each.value
+      logs = [
+        {
+          categoryGroup = var.diagnostic_log_category_group
+          enabled       = true
+          retentionPolicy = {
+            enabled = false
+            days    = 0
+          }
+        }
+      ]
       metrics = [
         {
           category = "Transaction"

@@ -132,6 +132,49 @@ Session host (snet-avd-session-hosts)
 
 ---
 
+---
+
+## Diagnostics
+
+The `manage_diagnostic_settings` flag controls whether this module creates Azure Monitor diagnostic settings. Set it to `false` when an Azure Policy DINE assignment already deploys diagnostic settings in the target subscription to avoid resource conflicts on `apply`.
+
+### Coverage per resource
+
+| Resource | Has diagnostic settings | What is captured | Notes |
+|---|---|---|---|
+| Log Analytics Workspace | ✅ Yes | `audit` category group (default) | Logs to itself |
+| NSG | ✅ Yes | `allLogs` (hardcoded) | One setting per NSG |
+| Host Pool | ✅ Yes | `allLogs` | One setting per host pool |
+| AVD Workspace | ✅ Yes | `allLogs` (default) | Configurable via `diagnostic_log_category_group` |
+| Application Group | ✅ Yes | `allLogs` (default) | Configurable via `diagnostic_log_category_group` |
+| Scaling Plan | ✅ Yes | `allLogs` | One setting per scaling plan |
+| Key Vault | ✅ Yes | `audit` (default) | Configurable; sibling category explicitly disabled (see below) |
+| FSLogix Storage Account | ✅ Yes | `Transaction` metric (account level) + `allLogs` logs (file service level) | Two settings: account-level metrics and file-service SMB access logs |
+| Session host VM | ⚠️ Partial | Boot diagnostics (screenshot / serial log) | Full telemetry collected via DCR — see below |
+| Network Interface | ❌ None | — | NICs do not produce meaningful diagnostic data for AVD scenarios |
+
+### Session host monitoring (DCR)
+
+When at least one session host is deployed and a Log Analytics Workspace exists, the root module automatically creates:
+
+- **`azurerm_monitor_data_collection_rule`** — collects the AVD Insights performance counters (30 s and 60 s intervals) and Windows Event Log channels (`Application`, `System`, `TerminalServices-RemoteConnectionManager/Admin`, `TerminalServices-LocalSessionManager/Operational`, `FSLogix-Apps/Operational`, `FSLogix-Apps/Admin`) required by the AVD Insights workbook.
+- **`azurerm_monitor_data_collection_rule_association`** — associates the rule with every session host VM.
+
+This uses the Azure Monitor Agent (AMA) pipeline, which Microsoft recommends for new AVD deployments. The VM resource itself only has `boot_diagnostics` (screenshot / serial log) via the session host module — not a `Microsoft.Insights/diagnosticSettings` resource.
+
+### `allLogs` vs `audit` category groups
+
+| Resource type | Supported groups | Module default |
+|---|---|---|
+| AVD resources (host pools, workspaces, app groups, scaling plans) | `allLogs` only | `allLogs` |
+| Key Vault | `allLogs` and `audit` | `audit` |
+| Log Analytics Workspace | `allLogs` and `audit` | `audit` |
+| FSLogix Storage (file service) | `allLogs` only | `allLogs` |
+
+`allLogs` captures all operational events including verbose activity; `audit` captures control-plane operations only. For Key Vault and Log Analytics Workspace, the module defaults to `audit` for cost efficiency and explicitly sets the sibling category to `enabled = false` to prevent the Azure portal from implicitly showing both as active.
+
+---
+
 <!-- BEGIN_TF_DOCS -->
 ## Requirements
 
@@ -190,6 +233,7 @@ Session host (snet-avd-session-hosts)
 | <a name="input_key_vaults"></a> [key\_vaults](#input\_key\_vaults) | (Optional) Key Vaults to create. Each vault gets a private endpoint, optional AVD local-admin secrets, and optional diagnostic forwarding. | <pre>map(object({<br/>    name                       = string<br/>    sku_name                   = optional(string, "standard")<br/>    enable_rbac_authorization  = optional(bool, true)<br/>    purge_protection_enabled   = optional(bool, true)<br/>    soft_delete_retention_days = optional(number, 90)<br/>    avd_local_admin_username   = optional(string, "avdadmin")<br/>    create_local_admin_secrets = optional(bool, false)<br/>    # Key from networking subnet_ids (created or existing) used for the private endpoint.<br/>    private_endpoint_subnet_key   = string<br/>    diagnostic_log_category_group = optional(string, "audit")<br/>  }))</pre> | `{}` | no |
 | <a name="input_location"></a> [location](#input\_location) | (Required) Azure region to deploy to. Changing this forces a new resource to be created. | `string` | n/a | yes |
 | <a name="input_log_analytics_workspaces"></a> [log\_analytics\_workspaces](#input\_log\_analytics\_workspaces) | (Optional) Log Analytics Workspaces to create. All other resources with diagnostics enabled will forward logs to the first workspace in this map unless a specific key is specified. | <pre>map(object({<br/>    name                          = string<br/>    sku                           = optional(string, "PerGB2018")<br/>    retention_in_days             = optional(number, 30)<br/>    daily_quota_gb                = optional(number, -1)<br/>    diagnostic_log_category_group = optional(string, "audit")<br/>  }))</pre> | `{}` | no |
+| <a name="input_manage_diagnostic_settings"></a> [manage\_diagnostic\_settings](#input\_manage\_diagnostic\_settings) | (Optional) When true, this module creates resource diagnostic settings. Set false when diagnostics are deployed by policy to avoid create/import conflicts. | `bool` | `true` | no |
 | <a name="input_network_security_groups"></a> [network\_security\_groups](#input\_network\_security\_groups) | (Optional) Network security groups to create in the AVD resource group for later subnet attachment. | <pre>map(object({<br/>    name = string<br/>    security_rules = optional(map(object({<br/>      name                         = optional(string)<br/>      priority                     = number<br/>      direction                    = string<br/>      access                       = string<br/>      protocol                     = string<br/>      description                  = optional(string)<br/>      source_port_range            = optional(string)<br/>      source_port_ranges           = optional(list(string))<br/>      destination_port_range       = optional(string)<br/>      destination_port_ranges      = optional(list(string))<br/>      source_address_prefix        = optional(string)<br/>      source_address_prefixes      = optional(list(string))<br/>      destination_address_prefix   = optional(string)<br/>      destination_address_prefixes = optional(list(string))<br/>    })), {})<br/>  }))</pre> | `{}` | no |
 | <a name="input_resource_group_name"></a> [resource\_group\_name](#input\_resource\_group\_name) | (Required) The name of the resource group in which to create the resources. | `string` | n/a | yes |
 | <a name="input_scaling_plans"></a> [scaling\_plans](#input\_scaling\_plans) | (Optional) Map of Azure Virtual Desktop scaling plans. Each plan references host pools by key from host\_pools. | <pre>map(object({<br/>    name                          = string<br/>    friendly_name                 = optional(string)<br/>    description                   = optional(string)<br/>    exclusion_tag                 = optional(string)<br/>    host_pool_type                = optional(string, "Pooled")<br/>    time_zone                     = optional(string, "UTC")<br/>    diagnostic_log_category_group = optional(string, "allLogs")<br/>    host_pool_references = optional(list(object({<br/>      host_pool_key = string<br/>      enabled       = optional(bool, true)<br/>    })), [])<br/>    schedules = optional(list(any), [])<br/>  }))</pre> | `{}` | no |

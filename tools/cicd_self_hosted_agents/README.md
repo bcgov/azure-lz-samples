@@ -130,8 +130,8 @@ Please refer to the official [terraform-azurerm-avm-ptn-cicd-agents-and-runners]
 
 | Name | Version |
 |------|---------|
-| <a name="provider_azapi"></a> [azapi](#provider\_azapi) | 2.5.0 |
-| <a name="provider_azurerm"></a> [azurerm](#provider\_azurerm) | 4.35.0 |
+| <a name="provider_azapi"></a> [azapi](#provider\_azapi) | 2.8.0 |
+| <a name="provider_azurerm"></a> [azurerm](#provider\_azurerm) | 4.56.0 |
 
 ## Modules
 

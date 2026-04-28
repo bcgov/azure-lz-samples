@@ -8,7 +8,6 @@ terraform {
 
 # Microsoft.DesktopVirtualization/scalingPlans@2024-04-03
 # Scaling plans are linked to host pools via the hostPoolReferences list.
-# publicNetworkAccess is hardcoded to "Disabled" consistent with the host pool.
 #
 # NOTE: The host pool's system-assigned managed identity must have the
 #       "Desktop Virtualization Power On Off Contributor" role on the resource group

@@ -164,6 +164,10 @@ log_analytics_workspaces = {
   }
 }
 
+# Set to false when diagnostics are created by Azure Policy assignments
+# in the target subscription to prevent diagnostic-setting create conflicts.
+manage_diagnostic_settings = false
+
 # Key Vault (optional)
 # -----------------------------------------------------------------------
 # Key Vault is NOT required for a functional AVD deployment.

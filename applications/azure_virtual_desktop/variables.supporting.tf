@@ -10,6 +10,12 @@ variable "log_analytics_workspaces" {
   default = {}
 }
 
+variable "manage_diagnostic_settings" {
+  description = "(Optional) When true, this module creates resource diagnostic settings. Set false when diagnostics are deployed by policy to avoid create/import conflicts."
+  type        = bool
+  default     = true
+}
+
 variable "key_vaults" {
   description = "(Optional) Key Vaults to create. Each vault gets a private endpoint, optional AVD local-admin secrets, and optional diagnostic forwarding."
   type = map(object({

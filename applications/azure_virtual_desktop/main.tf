@@ -22,7 +22,7 @@ module "networking" {
   existing_subnet_ids                 = var.existing_subnet_ids
   existing_network_security_group_ids = var.existing_network_security_group_ids
   log_analytics_workspace_id          = local.avd_log_analytics_workspace_id
-  enable_diagnostics                  = length(var.log_analytics_workspaces) > 0
+  enable_diagnostics                  = var.manage_diagnostic_settings && length(var.log_analytics_workspaces) > 0
 }
 
 module "host_pools" {
@@ -69,7 +69,7 @@ module "host_pools" {
   private_endpoints                         = each.value.private_endpoints
 
   log_analytics_workspace_id = local.avd_log_analytics_workspace_id
-  enable_diagnostics         = length(var.log_analytics_workspaces) > 0
+  enable_diagnostics         = var.manage_diagnostic_settings && length(var.log_analytics_workspaces) > 0
 }
 
 module "log_analytics_workspaces" {
@@ -84,6 +84,7 @@ module "log_analytics_workspaces" {
   retention_in_days             = each.value.retention_in_days
   daily_quota_gb                = each.value.daily_quota_gb
   diagnostic_log_category_group = each.value.diagnostic_log_category_group
+  enable_diagnostics            = var.manage_diagnostic_settings
 }
 
 module "key_vaults" {
@@ -105,7 +106,7 @@ module "key_vaults" {
   private_endpoint_subnet_id    = module.networking.subnet_ids[each.value.private_endpoint_subnet_key]
   log_analytics_workspace_id    = local.avd_log_analytics_workspace_id
   diagnostic_log_category_group = each.value.diagnostic_log_category_group
-  enable_diagnostics            = length(var.log_analytics_workspaces) > 0
+  enable_diagnostics            = var.manage_diagnostic_settings && length(var.log_analytics_workspaces) > 0
 }
 
 module "workspaces" {
@@ -126,7 +127,7 @@ module "workspaces" {
   tags                          = var.tags
   log_analytics_workspace_id    = local.avd_log_analytics_workspace_id
   diagnostic_log_category_group = each.value.diagnostic_log_category_group
-  enable_diagnostics            = length(var.log_analytics_workspaces) > 0
+  enable_diagnostics            = var.manage_diagnostic_settings && length(var.log_analytics_workspaces) > 0
 }
 
 module "session_hosts" {
@@ -204,7 +205,7 @@ module "fslogix_storage" {
   smb_contributor_principal_ids = var.fslogix_storage.smb_contributor_principal_ids
 
   log_analytics_workspace_id    = local.avd_log_analytics_workspace_id
-  enable_diagnostics            = length(var.log_analytics_workspaces) > 0
+  enable_diagnostics            = var.manage_diagnostic_settings && length(var.log_analytics_workspaces) > 0
   diagnostic_log_category_group = var.fslogix_storage.diagnostic_log_category_group
 }
 
@@ -355,7 +356,7 @@ module "application_groups" {
   tags                          = var.tags
   log_analytics_workspace_id    = local.avd_log_analytics_workspace_id
   diagnostic_log_category_group = each.value.diagnostic_log_category_group
-  enable_diagnostics            = length(var.log_analytics_workspaces) > 0
+  enable_diagnostics            = var.manage_diagnostic_settings && length(var.log_analytics_workspaces) > 0
 }
 
 resource "azurerm_role_assignment" "avd_service_autoscale_subscription" {
@@ -380,7 +381,7 @@ module "scaling_plans" {
   scaling_plans     = local.scaling_plans
 
   log_analytics_workspace_id = local.avd_log_analytics_workspace_id
-  enable_diagnostics         = length(var.log_analytics_workspaces) > 0
+  enable_diagnostics         = var.manage_diagnostic_settings && length(var.log_analytics_workspaces) > 0
 }
 
 resource "azurerm_virtual_desktop_workspace_application_group_association" "this" {

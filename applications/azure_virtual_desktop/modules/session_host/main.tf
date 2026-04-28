@@ -96,6 +96,11 @@ resource "azurerm_windows_virtual_machine" "this" {
     }
   }
 
+  # boot_diagnostics captures VM screenshots and serial console output only.
+  # Full telemetry (performance counters, Windows Event Logs) for AVD Insights
+  # is collected by the Data Collection Rule created in the root module via the
+  # Azure Monitor Agent pipeline — not through a diagnosticSettings resource on
+  # the VM itself.
   dynamic "boot_diagnostics" {
     for_each = var.enable_boot_diagnostics ? [1] : []
     content {

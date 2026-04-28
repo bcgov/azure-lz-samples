@@ -158,6 +158,10 @@ log_analytics_workspaces = {
   }
 }
 
+# Set to false when diagnostics are created by Azure Policy assignments
+# in the target subscription to prevent diagnostic-setting create conflicts.
+manage_diagnostic_settings = false
+
 # Key Vault (optional)
 # -----------------------------------------------------------------------
 # Key Vault is NOT required for a functional AVD deployment.
@@ -245,11 +249,27 @@ session_hosts = {
   }
 }
 
+# FSLogix profile storage
+# -----------------------------------------------------------------------
+# Provisions a Premium ZRS Azure Files account with Entra Kerberos auth,
+# a profiles share, a private endpoint on the AVD private-endpoint subnet,
+# and Storage File Data SMB Share Contributor for each session host VM identity.
+# Session hosts are automatically configured via a VM run command on first apply.
+#
+# The storage account is always private (public_network_access_enabled = false).
+# This is consistent with Option 1 — user access to the workspace feed and
+# host pool broker is public, but backend data-plane services remain private.
+#
+# Rename the storage account to a globally unique 3-24 lowercase alphanumeric name.
 fslogix_storage = {
-  name                        = "stfslogix833c2pub"
+  name                        = "stfslogixe833c2pub" # 3-24 lowercase alphanumeric; globally unique.
   private_endpoint_subnet_key = "avd_private_endpoints"
   account_tier                = "Premium"
   account_replication_type    = "ZRS"
   share_name                  = "profiles"
   share_quota_gb              = 1024
+
+  # Optional: add Entra user/group object IDs for SMB Share Contributor
+  # (required for NTFS permission management on the share). Leave empty for VM-only access.
+  # smb_contributor_principal_ids = ["<group-or-user-object-id>"]
 }
