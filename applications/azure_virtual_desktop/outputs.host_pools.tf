@@ -17,3 +17,13 @@ output "host_pool_registration_tokens" {
   }
   sensitive = true
 }
+
+output "scaling_plan_ids" {
+  description = "Map of scaling plan keys to resource IDs."
+  value       = module.scaling_plans.scaling_plan_ids
+}
+
+output "scaling_plan_names" {
+  description = "Map of scaling plan keys to resource names."
+  value       = module.scaling_plans.scaling_plan_names
+}

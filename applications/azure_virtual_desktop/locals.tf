@@ -78,4 +78,21 @@ locals {
       }
     }
   }
+
+  scaling_plans = {
+    for key, plan in var.scaling_plans : key => {
+      name           = plan.name
+      friendly_name  = try(plan.friendly_name, null)
+      description    = try(plan.description, null)
+      host_pool_type = plan.host_pool_type
+      time_zone      = plan.time_zone
+      host_pool_references = [
+        for reference in plan.host_pool_references : {
+          host_pool_id = module.host_pools[reference.host_pool_key].id
+          enabled      = reference.enabled
+        }
+      ]
+      schedules = plan.schedules
+    }
+  }
 }

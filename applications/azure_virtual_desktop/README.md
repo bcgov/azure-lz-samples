@@ -7,6 +7,7 @@
 |------|---------|
 | <a name="requirement_terraform"></a> [terraform](#requirement\_terraform) | >= 1.9.0, < 2.0.0 |
 | <a name="requirement_azapi"></a> [azapi](#requirement\_azapi) | ~> 2.0 |
+| <a name="requirement_azuread"></a> [azuread](#requirement\_azuread) | ~> 3.0 |
 | <a name="requirement_azurerm"></a> [azurerm](#requirement\_azurerm) | ~> 4.0 |
 | <a name="requirement_random"></a> [random](#requirement\_random) | ~> 3.6 |
 
@@ -14,6 +15,7 @@
 
 | Name | Version |
 |------|---------|
+| <a name="provider_azuread"></a> [azuread](#provider\_azuread) | 3.8.0 |
 | <a name="provider_azurerm"></a> [azurerm](#provider\_azurerm) | 4.70.0 |
 
 ## Modules
@@ -25,6 +27,7 @@
 | <a name="module_key_vaults"></a> [key\_vaults](#module\_key\_vaults) | ./modules/key_vault | n/a |
 | <a name="module_log_analytics_workspaces"></a> [log\_analytics\_workspaces](#module\_log\_analytics\_workspaces) | ./modules/log_analytics_workspace | n/a |
 | <a name="module_networking"></a> [networking](#module\_networking) | ./modules/networking | n/a |
+| <a name="module_scaling_plans"></a> [scaling\_plans](#module\_scaling\_plans) | ./modules/scaling_plan | n/a |
 | <a name="module_workspaces"></a> [workspaces](#module\_workspaces) | ./modules/workspace | n/a |
 
 ## Resources
@@ -32,7 +35,9 @@
 | Name | Type |
 |------|------|
 | [azurerm_resource_group.avd_rg](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/resource_group) | resource |
+| [azurerm_role_assignment.avd_service_autoscale_subscription](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/role_assignment) | resource |
 | [azurerm_virtual_desktop_workspace_application_group_association.this](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/virtual_desktop_workspace_application_group_association) | resource |
+| [azuread_service_principal.azure_virtual_desktop](https://registry.terraform.io/providers/hashicorp/azuread/latest/docs/data-sources/service_principal) | data source |
 | [azurerm_client_config.current](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/data-sources/client_config) | data source |
 | [azurerm_virtual_network.existing](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/data-sources/virtual_network) | data source |
 
@@ -49,11 +54,12 @@
 | <a name="input_log_analytics_workspaces"></a> [log\_analytics\_workspaces](#input\_log\_analytics\_workspaces) | (Optional) Log Analytics Workspaces to create. All other resources with diagnostics enabled will forward logs to the first workspace in this map unless a specific key is specified. | <pre>map(object({<br/>    name                          = string<br/>    sku                           = optional(string, "PerGB2018")<br/>    retention_in_days             = optional(number, 30)<br/>    daily_quota_gb                = optional(number, -1)<br/>    diagnostic_log_category_group = optional(string, "audit")<br/>  }))</pre> | `{}` | no |
 | <a name="input_network_security_groups"></a> [network\_security\_groups](#input\_network\_security\_groups) | (Optional) Network security groups to create in the AVD resource group for later subnet attachment. | <pre>map(object({<br/>    name = string<br/>    security_rules = optional(map(object({<br/>      name                         = optional(string)<br/>      priority                     = number<br/>      direction                    = string<br/>      access                       = string<br/>      protocol                     = string<br/>      description                  = optional(string)<br/>      source_port_range            = optional(string)<br/>      source_port_ranges           = optional(list(string))<br/>      destination_port_range       = optional(string)<br/>      destination_port_ranges      = optional(list(string))<br/>      source_address_prefix        = optional(string)<br/>      source_address_prefixes      = optional(list(string))<br/>      destination_address_prefix   = optional(string)<br/>      destination_address_prefixes = optional(list(string))<br/>    })), {})<br/>  }))</pre> | `{}` | no |
 | <a name="input_resource_group_name"></a> [resource\_group\_name](#input\_resource\_group\_name) | (Required) The name of the resource group in which to create the resources. | `string` | n/a | yes |
+| <a name="input_scaling_plans"></a> [scaling\_plans](#input\_scaling\_plans) | (Optional) Map of Azure Virtual Desktop scaling plans. Each plan references host pools by key from host\_pools. | <pre>map(object({<br/>    name           = string<br/>    friendly_name  = optional(string)<br/>    description    = optional(string)<br/>    host_pool_type = optional(string, "Pooled")<br/>    time_zone      = optional(string, "UTC")<br/>    host_pool_references = optional(list(object({<br/>      host_pool_key = string<br/>      enabled       = optional(bool, true)<br/>    })), [])<br/>    schedules = optional(list(any), [])<br/>  }))</pre> | `{}` | no |
 | <a name="input_subnets"></a> [subnets](#input\_subnets) | (Optional) Subnets to create in the existing virtual network. A subnet can optionally attach to a created network security group using network\_security\_group\_key. | <pre>map(object({<br/>    name                                          = string<br/>    address_prefixes                              = list(string)<br/>    network_security_group_key                    = optional(string)<br/>    service_endpoints                             = optional(list(string), [])<br/>    delegation_name                               = optional(string)<br/>    delegation_service_name                       = optional(string)<br/>    private_endpoint_network_policies_enabled     = optional(bool, true)<br/>    private_link_service_network_policies_enabled = optional(bool, true)<br/>  }))</pre> | `{}` | no |
 | <a name="input_tags"></a> [tags](#input\_tags) | (Optional) A map of tags to add to the resources | `map(string)` | `null` | no |
 | <a name="input_virtual_network_name"></a> [virtual\_network\_name](#input\_virtual\_network\_name) | (Required) The name of the existing virtual network used for Azure Virtual Desktop supporting resources. | `string` | n/a | yes |
 | <a name="input_virtual_network_resource_group_name"></a> [virtual\_network\_resource\_group\_name](#input\_virtual\_network\_resource\_group\_name) | (Required) The name of the resource group containing the existing virtual network. | `string` | n/a | yes |
-| <a name="input_workspaces"></a> [workspaces](#input\_workspaces) | (Optional) Azure Virtual Desktop workspaces to create. Application groups are associated using application\_groups[*].workspace\_key. | <pre>map(object({<br/>    name                          = string<br/>    friendly_name                 = optional(string)<br/>    description                   = optional(string)<br/>    diagnostic_log_category_group = optional(string, "allLogs")<br/>  }))</pre> | `{}` | no |
+| <a name="input_workspaces"></a> [workspaces](#input\_workspaces) | (Optional) Azure Virtual Desktop workspaces to create. Application groups are associated using application\_groups[*].workspace\_key. | <pre>map(object({<br/>    name                          = string<br/>    friendly_name                 = optional(string)<br/>    description                   = optional(string)<br/>    public_network_access_enabled = optional(bool, false)<br/>    diagnostic_log_category_group = optional(string, "allLogs")<br/>  }))</pre> | `{}` | no |
 
 ## Outputs
 
@@ -70,6 +76,8 @@
 | <a name="output_network_security_group_ids"></a> [network\_security\_group\_ids](#output\_network\_security\_group\_ids) | n/a |
 | <a name="output_resource_group_id"></a> [resource\_group\_id](#output\_resource\_group\_id) | n/a |
 | <a name="output_resource_group_name"></a> [resource\_group\_name](#output\_resource\_group\_name) | n/a |
+| <a name="output_scaling_plan_ids"></a> [scaling\_plan\_ids](#output\_scaling\_plan\_ids) | Map of scaling plan keys to resource IDs. |
+| <a name="output_scaling_plan_names"></a> [scaling\_plan\_names](#output\_scaling\_plan\_names) | Map of scaling plan keys to resource names. |
 | <a name="output_subnet_ids"></a> [subnet\_ids](#output\_subnet\_ids) | n/a |
 | <a name="output_workspace_application_group_associations"></a> [workspace\_application\_group\_associations](#output\_workspace\_application\_group\_associations) | Map of workspace-to-application-group associations keyed by workspace\_key.application\_group\_key. |
 | <a name="output_workspaces"></a> [workspaces](#output\_workspaces) | Map of Azure Virtual Desktop workspaces keyed by var.workspaces. |

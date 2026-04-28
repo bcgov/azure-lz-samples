@@ -15,20 +15,20 @@ terraform {
 #       containing the session host VMs before autoscale can power VMs on/off.
 
 resource "azapi_resource" "scaling_plan" {
-  for_each  = var.scaling_plans
-  type      = "Microsoft.DesktopVirtualization/scalingPlans@2024-04-03"
-  name      = each.value.name
-  parent_id = var.resource_group_id
-  location  = var.location
-  tags      = var.tags
+  for_each             = var.scaling_plans
+  type                 = "Microsoft.DesktopVirtualization/scalingPlans@2024-04-03"
+  name                 = each.value.name
+  parent_id            = var.resource_group_id
+  location             = var.location
+  tags                 = var.tags
+  ignore_null_property = true
 
   body = {
     properties = {
-      hostPoolType        = each.value.host_pool_type
-      publicNetworkAccess = "Disabled"
-      friendlyName        = each.value.friendly_name
-      description         = each.value.description
-      timeZone            = each.value.time_zone
+      hostPoolType = each.value.host_pool_type
+      friendlyName = each.value.friendly_name
+      description  = each.value.description
+      timeZone     = each.value.time_zone
       hostPoolReferences = [
         for ref in each.value.host_pool_references : {
           hostPoolArmPath    = ref.host_pool_id
@@ -37,5 +37,9 @@ resource "azapi_resource" "scaling_plan" {
       ]
       schedules = each.value.schedules
     }
+  }
+
+  lifecycle {
+    ignore_changes = [tags]
   }
 }

@@ -31,6 +31,40 @@ host_pools = {
   # }
 }
 
+scaling_plans = {
+  pooled_daytime = {
+    name = "sp-e833c2-avd-pooled"
+    host_pool_references = [
+      {
+        host_pool_key = "pooled_primary"
+        enabled       = true
+      }
+    ]
+    schedules = [
+      {
+        name                           = "weekday"
+        daysOfWeek                     = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday"]
+        rampUpStartTime                = { hour = 6, minute = 0 }
+        rampUpLoadBalancingAlgorithm   = "BreadthFirst"
+        rampUpMinimumHostsPct          = 20
+        rampUpCapacityThresholdPct     = 70
+        peakStartTime                  = { hour = 8, minute = 0 }
+        peakLoadBalancingAlgorithm     = "BreadthFirst"
+        rampDownStartTime              = { hour = 17, minute = 0 }
+        rampDownLoadBalancingAlgorithm = "DepthFirst"
+        rampDownMinimumHostsPct        = 10
+        rampDownCapacityThresholdPct   = 20
+        rampDownForceLogoffUsers       = false
+        rampDownWaitTimeMinutes        = 30
+        rampDownNotificationMessage    = "Sign out soon to allow planned scale-down."
+        rampDownStopHostsWhen          = "ZeroSessions"
+        offPeakStartTime               = { hour = 20, minute = 0 }
+        offPeakLoadBalancingAlgorithm  = "DepthFirst"
+      }
+    ]
+  }
+}
+
 network_security_groups = {
   avd_private_endpoints = {
     name = "nsg-avd-private-endpoints"

@@ -79,3 +79,15 @@ variable "existing_network_security_group_ids" {
   type        = map(string)
   default     = {}
 }
+
+variable "log_analytics_workspace_id" {
+  description = "(Optional) Log Analytics Workspace resource ID for NSG diagnostic settings."
+  type        = string
+  default     = null
+}
+
+variable "enable_diagnostics" {
+  description = "(Optional) When true, diagnostic settings are created for NSGs in this module."
+  type        = bool
+  default     = false
+}

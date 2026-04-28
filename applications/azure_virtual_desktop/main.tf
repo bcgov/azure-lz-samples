@@ -21,6 +21,8 @@ module "networking" {
   subnets                             = var.subnets
   existing_subnet_ids                 = var.existing_subnet_ids
   existing_network_security_group_ids = var.existing_network_security_group_ids
+  log_analytics_workspace_id          = local.avd_log_analytics_workspace_id
+  enable_diagnostics                  = length(var.log_analytics_workspaces) > 0
 }
 
 module "host_pools" {
@@ -107,6 +109,7 @@ module "workspaces" {
   location                      = azurerm_resource_group.avd_rg.location
   friendly_name                 = try(each.value.friendly_name, null)
   description                   = try(each.value.description, null)
+  public_network_access_enabled = each.value.public_network_access_enabled
   tags                          = var.tags
   log_analytics_workspace_id    = local.avd_log_analytics_workspace_id
   diagnostic_log_category_group = each.value.diagnostic_log_category_group
@@ -133,6 +136,28 @@ module "application_groups" {
   log_analytics_workspace_id    = local.avd_log_analytics_workspace_id
   diagnostic_log_category_group = each.value.diagnostic_log_category_group
   enable_diagnostics            = length(var.log_analytics_workspaces) > 0
+}
+
+resource "azurerm_role_assignment" "avd_service_autoscale_subscription" {
+  for_each = length(var.scaling_plans) > 0 ? { enabled = true } : {}
+
+  scope                = "/subscriptions/${data.azurerm_client_config.current.subscription_id}"
+  role_definition_name = "Desktop Virtualization Power On Off Contributor"
+  principal_id         = data.azuread_service_principal.azure_virtual_desktop.object_id
+}
+
+module "scaling_plans" {
+  source = "./modules/scaling_plan"
+
+  depends_on = [
+    module.host_pools,
+    azurerm_role_assignment.avd_service_autoscale_subscription,
+  ]
+
+  resource_group_id = azurerm_resource_group.avd_rg.id
+  location          = azurerm_resource_group.avd_rg.location
+  tags              = var.tags
+  scaling_plans     = local.scaling_plans
 }
 
 resource "azurerm_virtual_desktop_workspace_application_group_association" "this" {

@@ -4,3 +4,7 @@ data "azurerm_virtual_network" "existing" {
 }
 
 data "azurerm_client_config" "current" {}
+
+data "azuread_service_principal" "azure_virtual_desktop" {
+  client_id = "9cdead84-a844-4324-93f2-b2e6bb768d07"
+}

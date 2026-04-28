@@ -25,6 +25,12 @@ variable "description" {
   default     = null
 }
 
+variable "public_network_access_enabled" {
+  description = "(Optional) Whether public network access is enabled for the workspace. Defaults to false for policy-aligned private access."
+  type        = bool
+  default     = false
+}
+
 variable "tags" {
   description = "(Optional) Tags to apply to the workspace."
   type        = map(string)
@@ -38,13 +44,13 @@ variable "log_analytics_workspace_id" {
 }
 
 variable "diagnostic_log_category_group" {
-  description = "(Optional) Diagnostic log category group. Must be 'audit' or 'allLogs'. Defaults to 'allLogs'."
+  description = "(Optional) Diagnostic log category group. For AVD workspaces, this must be 'allLogs'."
   type        = string
   default     = "allLogs"
 
   validation {
-    condition     = contains(["audit", "allLogs"], var.diagnostic_log_category_group)
-    error_message = "diagnostic_log_category_group must be 'audit' or 'allLogs'."
+    condition     = var.diagnostic_log_category_group == "allLogs"
+    error_message = "diagnostic_log_category_group must be 'allLogs' for AVD workspaces."
   }
 }
 

@@ -44,6 +44,29 @@ resource "azurerm_network_security_rule" "this" {
   destination_address_prefixes = each.value.destination_address_prefixes
 }
 
+resource "azapi_resource" "network_security_group_diagnostics" {
+  for_each  = var.enable_diagnostics ? var.network_security_groups : {}
+  type      = "Microsoft.Insights/diagnosticSettings@2021-05-01-preview"
+  name      = "diag-${each.value.name}"
+  parent_id = azurerm_network_security_group.this[each.key].id
+
+  body = {
+    properties = {
+      workspaceId = var.log_analytics_workspace_id
+      logs = [
+        {
+          categoryGroup = "allLogs"
+          enabled       = true
+          retentionPolicy = {
+            enabled = false
+            days    = 0
+          }
+        }
+      ]
+    }
+  }
+}
+
 resource "azapi_resource" "subnet" {
   for_each = var.subnets
 

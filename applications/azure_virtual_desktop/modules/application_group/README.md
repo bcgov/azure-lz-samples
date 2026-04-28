@@ -28,7 +28,7 @@ No modules.
 | Name | Description | Type | Default | Required |
 |------|-------------|------|---------|:--------:|
 | <a name="input_description"></a> [description](#input\_description) | (Optional) Description for the application group. | `string` | `null` | no |
-| <a name="input_diagnostic_log_category_group"></a> [diagnostic\_log\_category\_group](#input\_diagnostic\_log\_category\_group) | (Optional) Diagnostic log category group. Must be 'audit' or 'allLogs'. Defaults to 'allLogs'. | `string` | `"allLogs"` | no |
+| <a name="input_diagnostic_log_category_group"></a> [diagnostic\_log\_category\_group](#input\_diagnostic\_log\_category\_group) | (Optional) Diagnostic log category group. For AVD application groups, this must be 'allLogs'. | `string` | `"allLogs"` | no |
 | <a name="input_enable_diagnostics"></a> [enable\_diagnostics](#input\_enable\_diagnostics) | (Optional) When true, diagnostic settings are created for the application group. | `bool` | `false` | no |
 | <a name="input_friendly_name"></a> [friendly\_name](#input\_friendly\_name) | (Optional) Friendly display name for the application group. | `string` | `null` | no |
 | <a name="input_host_pool_id"></a> [host\_pool\_id](#input\_host\_pool\_id) | (Required) Host pool resource ID associated with the application group. | `string` | n/a | yes |

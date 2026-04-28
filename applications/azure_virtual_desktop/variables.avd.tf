@@ -148,3 +148,38 @@ variable "host_pools" {
     error_message = "Each Scheduled agent update that uses session host local time must define maintenance_window_time_zone."
   }
 }
+
+variable "scaling_plans" {
+  description = "(Optional) Map of Azure Virtual Desktop scaling plans. Each plan references host pools by key from host_pools."
+  type = map(object({
+    name           = string
+    friendly_name  = optional(string)
+    description    = optional(string)
+    host_pool_type = optional(string, "Pooled")
+    time_zone      = optional(string, "UTC")
+    host_pool_references = optional(list(object({
+      host_pool_key = string
+      enabled       = optional(bool, true)
+    })), [])
+    schedules = optional(list(any), [])
+  }))
+  default = {}
+
+  validation {
+    condition = alltrue([
+      for plan in values(var.scaling_plans) :
+      contains(["Pooled", "Personal"], plan.host_pool_type)
+    ])
+    error_message = "Each scaling plan host_pool_type must be Pooled or Personal."
+  }
+
+  validation {
+    condition = alltrue(flatten([
+      for plan in values(var.scaling_plans) : [
+        for reference in plan.host_pool_references :
+        contains(keys(var.host_pools), reference.host_pool_key)
+      ]
+    ]))
+    error_message = "Each scaling plan host_pool_references.host_pool_key must reference an existing key in host_pools."
+  }
+}

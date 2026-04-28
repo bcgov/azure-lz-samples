@@ -4,6 +4,7 @@ variable "workspaces" {
     name                          = string
     friendly_name                 = optional(string)
     description                   = optional(string)
+    public_network_access_enabled = optional(bool, false)
     diagnostic_log_category_group = optional(string, "allLogs")
   }))
   default = {}

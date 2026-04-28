@@ -41,14 +41,6 @@ resource "azapi_resource" "diagnostics" {
             enabled = false
             days    = 0
           }
-        },
-        {
-          categoryGroup = var.diagnostic_log_category_group == "allLogs" ? "audit" : "allLogs"
-          enabled       = false
-          retentionPolicy = {
-            enabled = false
-            days    = 0
-          }
         }
       ]
     }
