@@ -19,7 +19,7 @@ output "public_network_access" {
 }
 
 output "registration_token" {
-  value     = try(azapi_resource.host_pool.output.properties.registrationInfo.token, null)
+  value     = try(azurerm_virtual_desktop_host_pool_registration_info.this[0].token, null)
   sensitive = true
 }
 

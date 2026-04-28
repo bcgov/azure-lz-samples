@@ -170,6 +170,71 @@ module "session_hosts" {
   tags                                 = each.value.tags
 }
 
+resource "azurerm_monitor_data_collection_rule" "session_hosts" {
+  count = local.avd_log_analytics_workspace_id != null && length(local.session_host_instances) > 0 ? 1 : 0
+
+  name                = "dcr-${substr(replace(lower(var.resource_group_name), "_", "-"), 0, 50)}-avd-sh"
+  resource_group_name = azurerm_resource_group.avd_rg.name
+  location            = azurerm_resource_group.avd_rg.location
+  kind                = "Windows"
+  tags                = var.tags
+
+  destinations {
+    log_analytics {
+      name                  = "law"
+      workspace_resource_id = local.avd_log_analytics_workspace_id
+    }
+  }
+
+  data_flow {
+    streams      = ["Microsoft-Perf"]
+    destinations = ["law"]
+  }
+
+  data_flow {
+    streams      = ["Microsoft-Event"]
+    destinations = ["law"]
+  }
+
+  data_sources {
+    performance_counter {
+      name                          = "perf-core"
+      streams                       = ["Microsoft-Perf"]
+      sampling_frequency_in_seconds = 60
+      counter_specifiers = [
+        "\\Processor(_Total)\\% Processor Time",
+        "\\Memory\\Committed Bytes",
+        "\\LogicalDisk(_Total)\\Free Megabytes",
+      ]
+    }
+
+    windows_event_log {
+      name    = "windows-core-events"
+      streams = ["Microsoft-Event"]
+      x_path_queries = [
+        "Application!*[System[(Level=1 or Level=2 or Level=3)]]",
+        "System!*[System[(Level=1 or Level=2 or Level=3)]]",
+      ]
+    }
+  }
+
+  lifecycle {
+    ignore_changes = [tags]
+  }
+}
+
+resource "azurerm_monitor_data_collection_rule_association" "session_hosts" {
+  for_each = local.avd_log_analytics_workspace_id != null ? local.session_host_instances : {}
+
+  name                    = "dcra-${replace(each.key, ".", "-")}"
+  target_resource_id      = module.session_hosts[each.key].id
+  data_collection_rule_id = azurerm_monitor_data_collection_rule.session_hosts[0].id
+
+  depends_on = [
+    module.session_hosts,
+  ]
+}
+
 module "application_groups" {
   for_each = var.application_groups
   source   = "./modules/application_group"

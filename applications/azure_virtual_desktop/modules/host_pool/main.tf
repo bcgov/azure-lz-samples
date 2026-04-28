@@ -54,6 +54,17 @@ resource "azapi_resource" "host_pool" {
   }
 }
 
+resource "azurerm_virtual_desktop_host_pool_registration_info" "this" {
+  count = var.registration_token_operation == "Update" ? 1 : 0
+
+  hostpool_id     = azapi_resource.host_pool.id
+  expiration_date = local.registration_token_expiry
+
+  lifecycle {
+    ignore_changes = [expiration_date]
+  }
+}
+
 resource "azapi_resource" "host_pool_diagnostics" {
   for_each  = var.enable_diagnostics ? { enabled = var.log_analytics_workspace_id } : {}
   type      = "Microsoft.Insights/diagnosticSettings@2021-05-01-preview"
