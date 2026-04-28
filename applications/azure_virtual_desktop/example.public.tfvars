@@ -206,6 +206,24 @@ application_groups = {
     type          = "Desktop"
     host_pool_key = "pooled_public"
     workspace_key = "public"
+
+    # ---------------------------------------------------------------------------
+    # assignments — optional. Grant principals the Desktop Virtualization User
+    # role on this application group, which allows them to see and launch the
+    # desktop or app in the AVD client. Omit the block entirely to skip.
+    #
+    # Each map key is a stable Terraform identity (any unique string).
+    # principal_type: "User", "Group", or "ServicePrincipal" (optional but
+    #   recommended — speeds up role assignment creation).
+    # role_definition_name: defaults to "Desktop Virtualization User" if omitted.
+    # ---------------------------------------------------------------------------
+    # assignments = {
+    #   avd_users = {
+    #     principal_id   = "<entra-group-object-id>"
+    #     principal_type = "Group"
+    #     # role_definition_name = "Desktop Virtualization User" # default
+    #   }
+    # }
   }
 }
 

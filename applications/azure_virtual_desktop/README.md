@@ -47,6 +47,91 @@ End-user AVD authentication uses Entra ID SSO (`enablerdsaadauth:i:1`) and does 
 
 ---
 
+## Connectivity Flows
+
+The diagrams below describe the network paths for both access models. All session host egress is outbound only — no inbound ports are required on the session host NSG.
+
+### End-user connectivity
+
+**Option 1 — Public (`example.public.tfvars`)**
+
+```
+End-user (internet)
+  │
+  ├─► rdweb.wvd.microsoft.com (HTTPS 443)        # Workspace feed — global AVD gateway
+  │     └─ Entra ID authentication
+  │     └─ Returns list of published resources
+  │
+  ├─► rdbroker.wvd.microsoft.com (HTTPS 443)     # Session brokering — host pool lookup
+  │     └─ Returns gateway token & session host assignment
+  │
+  └─► Azure RDP Gateway (TCP 443 / UDP 3478)     # Reverse-connect RDP tunnel
+        └─ Session host (no inbound NSG rule needed)
+```
+
+The workspace feed is served publicly. The host pool `public_network_access = "EnabledForClientsOnly"` allows clients to reach the broker endpoint without a private endpoint, while session host traffic still uses the reverse-connect gateway.
+
+**Option 2 — Private (`example.private.tfvars`)**
+
+```
+End-user (corporate network / VPN / ExpressRoute)
+  │
+  ├─► Private DNS: *.wvd.microsoft.com → privatelink.wvd.microsoft.com
+  │     └─ Resolves workspace and host pool FQDNs to private endpoint IPs
+  │           in snet-avd-private-endpoints
+  │
+  ├─► Workspace private endpoint (subresource: feed)         # HTTPS 443, private IP
+  │     └─ Entra ID authentication
+  │     └─ Returns list of published resources
+  │
+  ├─► Host pool private endpoint (subresource: connection)   # HTTPS 443, private IP
+  │     └─ Returns gateway token & session host assignment
+  │
+  └─► Azure RDP Gateway (TCP 443 / UDP 3478)                 # Reverse-connect tunnel
+        └─ Session host (no inbound NSG rule needed)
+```
+
+> **DNS note**: Azure Policy (DINE) auto-creates the Private DNS Zone A-records for new private endpoints. This policy takes ~10 minutes to trigger after `terraform apply` completes. The AVD client and session host agent will both retry — no manual action is required, but the host pool may show the session host as **Unavailable** for up to ~10–15 minutes after a net-new deployment.
+
+---
+
+### AVD component connectivity (session host outbound)
+
+The session host requires outbound HTTPS access to the following endpoints. All connections are initiated by the session host — no inbound rules are required.
+
+| Destination | Port | Purpose |
+|---|---|---|
+| `*.wvd.microsoft.com` | TCP 443 | AVD agent registration and heartbeat to the AVD broker |
+| `login.microsoftonline.com` | TCP 443 | Entra ID join and token acquisition |
+| `*.login.microsoft.com` | TCP 443 | Entra ID SSO and authentication flows |
+| `management.azure.com` | TCP 443 | Azure Resource Manager (extensions, run commands) |
+| `*.blob.core.windows.net` | TCP 443 | Extension and agent package downloads |
+| `go.microsoft.com` | TCP 443 | AVD agent MSI downloads during provisioning |
+| `aka.ms` | TCP 443 | FSLogix installer download (redirects to blob) |
+| FSLogix storage PE FQDN (`*.file.core.windows.net`) | TCP 445 | SMB profile container mounts via private endpoint |
+| Key Vault PE FQDN (`*.vaultcore.azure.net`) | TCP 443 | Secret writes (only when `create_local_admin_secrets = true`) |
+| Log Analytics ingestion endpoint | TCP 443 | DCR / AMA agent telemetry forwarding |
+
+```
+Session host (snet-avd-session-hosts)
+  │
+  ├─► AVD Broker  *.wvd.microsoft.com            (HTTPS — agent registration / heartbeat)
+  ├─► Entra ID    login.microsoftonline.com       (HTTPS — join + SSO)
+  ├─► ARM         management.azure.com            (HTTPS — extensions / run commands)
+  ├─► Blob CDN    *.blob.core.windows.net         (HTTPS — agent + extension downloads)
+  │
+  ├─► Azure Files PE  stfslogix<suffix>.file.core.windows.net
+  │     └─ snet-avd-private-endpoints : 10.x.x.x  (SMB 445 — FSLogix profile container)
+  │
+  ├─► Key Vault PE    kv-<name>.vaultcore.azure.net
+  │     └─ snet-avd-private-endpoints : 10.x.x.x  (HTTPS 443 — only if create_local_admin_secrets = true)
+  │
+  └─► Log Analytics   <workspace>.ods.opinsights.azure.com
+        └─ snet-avd-private-endpoints (if LAW PE configured) or internet  (HTTPS 443 — DCR / AMA)
+```
+
+---
+
 <!-- BEGIN_TF_DOCS -->
 ## Requirements
 
@@ -62,32 +147,29 @@ End-user AVD authentication uses Entra ID SSO (`enablerdsaadauth:i:1`) and does 
 
 | Name | Version |
 |------|---------|
+| <a name="provider_azapi"></a> [azapi](#provider\_azapi) | 2.9.0 |
 | <a name="provider_azuread"></a> [azuread](#provider\_azuread) | 3.8.0 |
 | <a name="provider_azurerm"></a> [azurerm](#provider\_azurerm) | 4.70.0 |
+| <a name="provider_random"></a> [random](#provider\_random) | 3.8.1 |
 
 ## Modules
 
 | Name | Source | Version |
 |------|--------|---------|
 | <a name="module_application_groups"></a> [application\_groups](#module\_application\_groups) | ./modules/application_group | n/a |
-| <a name="module_fslogix_storage"></a> [fslogix\_storage](#module\_fslogix\_storage) | ./modules/fslogix_storage | n/a |
 | <a name="module_host_pools"></a> [host\_pools](#module\_host\_pools) | ./modules/host_pool | n/a |
 | <a name="module_key_vaults"></a> [key\_vaults](#module\_key\_vaults) | ./modules/key_vault | n/a |
 | <a name="module_log_analytics_workspaces"></a> [log\_analytics\_workspaces](#module\_log\_analytics\_workspaces) | ./modules/log_analytics_workspace | n/a |
 | <a name="module_networking"></a> [networking](#module\_networking) | ./modules/networking | n/a |
 | <a name="module_scaling_plans"></a> [scaling\_plans](#module\_scaling\_plans) | ./modules/scaling_plan | n/a |
-| <a name="module_session_hosts"></a> [session\_hosts](#module\_session\_hosts) | ./modules/session_host | n/a |
 | <a name="module_workspaces"></a> [workspaces](#module\_workspaces) | ./modules/workspace | n/a |
 
 ## Resources
 
 | Name | Type |
 |------|------|
-| [azurerm_monitor_data_collection_rule.session_hosts](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/monitor_data_collection_rule) | resource |
-| [azurerm_monitor_data_collection_rule_association.session_hosts](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/monitor_data_collection_rule_association) | resource |
 | [azurerm_resource_group.avd_rg](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/resource_group) | resource |
 | [azurerm_role_assignment.avd_service_autoscale_subscription](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/role_assignment) | resource |
-| [azurerm_role_assignment.fslogix_smb_session_hosts](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/role_assignment) | resource |
 | [azurerm_virtual_desktop_workspace_application_group_association.this](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/virtual_desktop_workspace_application_group_association) | resource |
 | [azuread_service_principal.azure_virtual_desktop](https://registry.terraform.io/providers/hashicorp/azuread/latest/docs/data-sources/service_principal) | data source |
 | [azurerm_client_config.current](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/data-sources/client_config) | data source |
@@ -97,23 +179,21 @@ End-user AVD authentication uses Entra ID SSO (`enablerdsaadauth:i:1`) and does 
 
 | Name | Description | Type | Default | Required |
 |------|-------------|------|---------|:--------:|
-| <a name="input_application_groups"></a> [application\_groups](#input\_application\_groups) | (Optional) Azure Virtual Desktop application groups to create and optionally associate with workspaces. | <pre>map(object({<br/>    name                          = string<br/>    type                          = string<br/>    host_pool_key                 = string<br/>    friendly_name                 = optional(string)<br/>    description                   = optional(string)<br/>    workspace_key                 = optional(string)<br/>    diagnostic_log_category_group = optional(string, "allLogs")<br/>    assignments = optional(map(object({<br/>      principal_id         = string<br/>      principal_type       = optional(string)<br/>      role_definition_name = optional(string, "Desktop Virtualization User")<br/>    })), {})<br/>  }))</pre> | `{}` | no |
+| <a name="input_application_groups"></a> [application\_groups](#input\_application\_groups) | (Optional) Azure Virtual Desktop application groups to create and optionally associate with workspaces. | <pre>map(object({<br/>    name                          = string<br/>    type                          = string<br/>    host_pool_key                 = string<br/>    friendly_name                 = optional(string)<br/>    description                   = optional(string)<br/>    workspace_key                 = optional(string)<br/>    diagnostic_log_category_group = optional(string, "allLogs")<br/>  }))</pre> | `{}` | no |
 | <a name="input_existing_network_security_group_ids"></a> [existing\_network\_security\_group\_ids](#input\_existing\_network\_security\_group\_ids) | (Optional) Map of pre-existing NSG resource IDs (key => id) to surface in networking outputs. | `map(string)` | `{}` | no |
 | <a name="input_existing_subnet_ids"></a> [existing\_subnet\_ids](#input\_existing\_subnet\_ids) | (Optional) Map of pre-existing subnet resource IDs (key => id). Use this when a subnet required by this deployment already exists and should not be recreated. The key is referenced by Key Vault private\_endpoint\_subnet\_key. | `map(string)` | `{}` | no |
-| <a name="input_fslogix_storage"></a> [fslogix\_storage](#input\_fslogix\_storage) | (Optional) FSLogix profile storage configuration. When set, an Azure Files account with Entra Kerberos authentication is provisioned and session hosts are configured to use it for profile containers. Leave null to skip FSLogix storage deployment. | <pre>object({<br/>    name                          = string # Storage account name (3-24 lowercase alphanumeric).<br/>    private_endpoint_subnet_key   = string # Key from subnets or existing_subnet_ids for the file private endpoint.<br/>    account_tier                  = optional(string, "Premium")<br/>    account_replication_type      = optional(string, "ZRS")<br/>    share_name                    = optional(string, "profiles")<br/>    share_quota_gb                = optional(number, 1024)<br/>    smb_contributor_principal_ids = optional(list(string), []) # Additional Entra principal IDs (users/groups).<br/>    diagnostic_log_category_group = optional(string, "allLogs")<br/>  })</pre> | `null` | no |
-| <a name="input_host_pools"></a> [host\_pools](#input\_host\_pools) | (Optional) Map of Azure Virtual Desktop host pools to create. The map key is the stable Terraform identity, so ordering changes in tfvars do not cause false plan changes. | <pre>map(object({<br/>    name                                  = string<br/>    friendly_name                         = optional(string)<br/>    description                           = optional(string)<br/>    public_network_access                 = optional(string)<br/>    deployment_scope                      = optional(string)<br/>    management_type                       = optional(string)<br/>    ring                                  = optional(number)<br/>    vm_template                           = optional(string)<br/>    allow_rdp_shortpath_with_private_link = optional(string)<br/>    direct_udp                            = optional(string)<br/>    managed_private_udp                   = optional(string)<br/>    public_udp                            = optional(string)<br/>    relay_udp                             = optional(string)<br/>    host_pool_type                        = optional(string)<br/>    load_balancer_type                    = optional(string)<br/>    personal_desktop_assignment_type      = optional(string)<br/>    preferred_app_group_type              = optional(string)<br/>    max_session_limit                     = optional(number)<br/>    start_vm_on_connect                   = optional(bool)<br/>    validation_environment                = optional(bool)<br/>    custom_rdp_properties                 = optional(string)<br/>    rdp_properties = optional(object({<br/>      entra_single_sign_on  = optional(bool) # enablerdsaadauth:i:1<br/>      auto_reconnection     = optional(bool) # autoreconnection enabled:i:1<br/>      bandwidth_auto_detect = optional(bool) # bandwidthautodetect:i:1<br/>      network_auto_detect   = optional(bool) # networkautodetect:i:1<br/>      bulk_compression      = optional(bool) # compression:i:1<br/>      connections = optional(object({<br/>        credential_security_support_provider = optional(string) # Disabled, EnabledIfSupported<br/>      }))<br/>      session_behavior = optional(object({<br/>        video_playback_mode = optional(string) # Disabled, RdpEfficientWhenPossible<br/>      }))<br/>      device_redirection = optional(object({<br/>        audio_capture                             = optional(bool)   # audiocapturemode:i:0|1<br/>        audio_mode                                = optional(string) # PlayOnLocalDevice, PlayOnRemoteSession, DoNotPlay<br/>        cameras                                   = optional(string) # camerastoredirect:s:<value><br/>        devices                                   = optional(string) # devicestoredirect:s:<value><br/>        drives                                    = optional(string) # drivestoredirect:s:<value><br/>        encode_redirected_video_capture           = optional(bool)   # encode redirected video capture:i:0|1<br/>        keyboard_hook                             = optional(string) # Local, RemoteWhenInFocus, RemoteInFullScreen, RemoteAppWhenInFocus<br/>        redirect_clipboard                        = optional(bool)   # redirectclipboard:i:0|1<br/>        redirect_com_ports                        = optional(bool)   # redirectcomports:i:0|1<br/>        redirected_video_capture_encoding_quality = optional(string) # HighCompression, MediumCompression, LowCompressionHighQuality<br/>        redirect_location                         = optional(bool)   # redirectlocation:i:0|1<br/>        redirect_printers                         = optional(bool)   # redirectprinters:i:0|1<br/>        redirect_smart_cards                      = optional(bool)   # redirectsmartcards:i:0|1<br/>        redirect_webauthn                         = optional(bool)   # redirectwebauthn:i:0|1<br/>        usb_devices                               = optional(string) # usbdevicestoredirect:s:<value><br/>      }))<br/>      display_settings = optional(object({<br/>        desktop_size_id                 = optional(number) # desktop size id:i:0..4<br/>        desktop_height                  = optional(number) # desktopheight:i:200..8192<br/>        desktop_scale_factor            = optional(number) # desktopscalefactor:i:100|125|150|175|200|250|300|400|500<br/>        desktop_width                   = optional(number) # desktopwidth:i:200..8192<br/>        dynamic_resolution              = optional(bool)   # dynamic resolution:i:0|1<br/>        maximize_to_current_displays    = optional(bool)   # maximizetocurrentdisplays:i:0|1<br/>        screen_mode                     = optional(string) # Windowed, FullScreen<br/>        selected_monitors               = optional(string) # selectedmonitors:s:<value><br/>        single_monitor_in_windowed_mode = optional(bool)   # singlemoninwindowedmode:i:0|1<br/>        smart_sizing                    = optional(bool)   # smart sizing:i:0|1<br/>        use_multimon                    = optional(bool)   # use multimon:i:0|1<br/>      }))<br/>    }))<br/>    use_session_host_configuration  = optional(bool) # reserved: requires managementType=Automated; scaffold only<br/>    registration_token_operation    = optional(string)<br/>    registration_token_expiry_hours = optional(number)<br/>    agent_update = optional(object({<br/>      type                         = optional(string)<br/>      use_session_host_local_time  = optional(bool)<br/>      maintenance_window_time_zone = optional(string)<br/>      maintenance_windows = optional(list(object({<br/>        day_of_week = string<br/>        hour        = number<br/>      })))<br/>    }))<br/>    private_endpoints = optional(list(object({<br/>      subnet_key        = string<br/>      subresource_names = optional(list(string), ["connection"])<br/>    })), [])<br/>  }))</pre> | `{}` | no |
+| <a name="input_host_pools"></a> [host\_pools](#input\_host\_pools) | (Optional) Map of Azure Virtual Desktop host pools to create. The map key is the stable Terraform identity, so ordering changes in tfvars do not cause false plan changes. | <pre>map(object({<br/>    name                             = string<br/>    friendly_name                    = optional(string)<br/>    description                      = optional(string)<br/>    host_pool_type                   = optional(string)<br/>    load_balancer_type               = optional(string)<br/>    personal_desktop_assignment_type = optional(string)<br/>    preferred_app_group_type         = optional(string)<br/>    max_session_limit                = optional(number)<br/>    start_vm_on_connect              = optional(bool)<br/>    validation_environment           = optional(bool)<br/>    custom_rdp_properties            = optional(string)<br/>    rdp_properties = optional(object({<br/>      entra_single_sign_on  = optional(bool) # enablerdsaadauth:i:1<br/>      auto_reconnection     = optional(bool) # autoreconnection enabled:i:1<br/>      bandwidth_auto_detect = optional(bool) # bandwidthautodetect:i:1<br/>      network_auto_detect   = optional(bool) # networkautodetect:i:1<br/>      bulk_compression      = optional(bool) # compression:i:1<br/>    }))<br/>    use_session_host_configuration  = optional(bool) # reserved: requires managementType=Automated; scaffold only<br/>    registration_token_operation    = optional(string)<br/>    registration_token_expiry_hours = optional(number)<br/>    agent_update = optional(object({<br/>      type                         = optional(string)<br/>      use_session_host_local_time  = optional(bool)<br/>      maintenance_window_time_zone = optional(string)<br/>      maintenance_windows = optional(list(object({<br/>        day_of_week = string<br/>        hour        = number<br/>      })))<br/>    }))<br/>  }))</pre> | `{}` | no |
 | <a name="input_key_vaults"></a> [key\_vaults](#input\_key\_vaults) | (Optional) Key Vaults to create. Each vault gets a private endpoint, optional AVD local-admin secrets, and optional diagnostic forwarding. | <pre>map(object({<br/>    name                       = string<br/>    sku_name                   = optional(string, "standard")<br/>    enable_rbac_authorization  = optional(bool, true)<br/>    purge_protection_enabled   = optional(bool, true)<br/>    soft_delete_retention_days = optional(number, 90)<br/>    avd_local_admin_username   = optional(string, "avdadmin")<br/>    create_local_admin_secrets = optional(bool, false)<br/>    # Key from networking subnet_ids (created or existing) used for the private endpoint.<br/>    private_endpoint_subnet_key   = string<br/>    diagnostic_log_category_group = optional(string, "audit")<br/>  }))</pre> | `{}` | no |
 | <a name="input_location"></a> [location](#input\_location) | (Required) Azure region to deploy to. Changing this forces a new resource to be created. | `string` | n/a | yes |
 | <a name="input_log_analytics_workspaces"></a> [log\_analytics\_workspaces](#input\_log\_analytics\_workspaces) | (Optional) Log Analytics Workspaces to create. All other resources with diagnostics enabled will forward logs to the first workspace in this map unless a specific key is specified. | <pre>map(object({<br/>    name                          = string<br/>    sku                           = optional(string, "PerGB2018")<br/>    retention_in_days             = optional(number, 30)<br/>    daily_quota_gb                = optional(number, -1)<br/>    diagnostic_log_category_group = optional(string, "audit")<br/>  }))</pre> | `{}` | no |
 | <a name="input_network_security_groups"></a> [network\_security\_groups](#input\_network\_security\_groups) | (Optional) Network security groups to create in the AVD resource group for later subnet attachment. | <pre>map(object({<br/>    name = string<br/>    security_rules = optional(map(object({<br/>      name                         = optional(string)<br/>      priority                     = number<br/>      direction                    = string<br/>      access                       = string<br/>      protocol                     = string<br/>      description                  = optional(string)<br/>      source_port_range            = optional(string)<br/>      source_port_ranges           = optional(list(string))<br/>      destination_port_range       = optional(string)<br/>      destination_port_ranges      = optional(list(string))<br/>      source_address_prefix        = optional(string)<br/>      source_address_prefixes      = optional(list(string))<br/>      destination_address_prefix   = optional(string)<br/>      destination_address_prefixes = optional(list(string))<br/>    })), {})<br/>  }))</pre> | `{}` | no |
 | <a name="input_resource_group_name"></a> [resource\_group\_name](#input\_resource\_group\_name) | (Required) The name of the resource group in which to create the resources. | `string` | n/a | yes |
-| <a name="input_scaling_plans"></a> [scaling\_plans](#input\_scaling\_plans) | (Optional) Map of Azure Virtual Desktop scaling plans. Each plan references host pools by key from host\_pools. | <pre>map(object({<br/>    name                          = string<br/>    friendly_name                 = optional(string)<br/>    description                   = optional(string)<br/>    exclusion_tag                 = optional(string)<br/>    host_pool_type                = optional(string, "Pooled")<br/>    time_zone                     = optional(string, "UTC")<br/>    diagnostic_log_category_group = optional(string, "allLogs")<br/>    host_pool_references = optional(list(object({<br/>      host_pool_key = string<br/>      enabled       = optional(bool, true)<br/>    })), [])<br/>    schedules = optional(list(any), [])<br/>  }))</pre> | `{}` | no |
-| <a name="input_session_hosts"></a> [session\_hosts](#input\_session\_hosts) | (Optional) Map of Azure VM-based AVD session host definitions. Each entry can create one or more Microsoft Entra joined Windows session hosts and register them to a standard-management host pool. | <pre>map(object({<br/>    host_pool_key                = string<br/>    subnet_key                   = string<br/>    instance_count               = optional(number, 1)<br/>    vm_name_prefix               = optional(string)<br/>    computer_name_prefix         = optional(string)<br/>    size                         = optional(string, "Standard_D4ds_v4")<br/>    join_type                    = optional(string, "MicrosoftEntraJoined")<br/>    admin_username               = optional(string, "avdadmin")<br/>    admin_password               = optional(string)<br/>    license_type                 = optional(string, "Windows_Client")<br/>    os_disk_storage_account_type = optional(string, "StandardSSD_LRS")<br/>    os_disk_size_gb              = optional(number) # Override OS disk size in GB; leave null to use image default.<br/>    diff_disk_settings = optional(object({          # Ephemeral OS disk. Not compatible with os_disk_size_gb.<br/>      option    = string                            # CacheDisk or NvmeDisk<br/>      placement = optional(string)                  # CacheDisk or ResourceDisk<br/>    }))<br/>    accelerated_networking_enabled       = optional(bool, false)       # Requires a VM size that supports AN.<br/>    availability_zone                    = optional(number)            # 1, 2, or 3. Leave null to let Azure choose.<br/>    enable_boot_diagnostics              = optional(bool, true)        # Managed boot diagnostics by default.<br/>    boot_diagnostics_storage_account_uri = optional(string)            # Override with a specific storage account URI.<br/>    extensions_time_budget               = optional(string, "PT1H30M") # ISO 8601 duration budget for all extensions.<br/>    enable_integrity_monitoring          = optional(bool, true)        # Guest attestation integrity monitoring for Trusted Launch VMs.<br/>    patch_mode                           = optional(string, "AutomaticByOS")<br/>    enable_automatic_updates             = optional(bool, true)<br/>    provision_vm_agent                   = optional(bool, true)<br/>    secure_boot_enabled                  = optional(bool, true)<br/>    vtpm_enabled                         = optional(bool, true)<br/>    source_image_id                      = optional(string)<br/>    source_image_reference = optional(object({<br/>      publisher = string<br/>      offer     = string<br/>      sku       = string<br/>      version   = optional(string, "latest")<br/>    }))<br/>    vm_role_assignments = optional(map(object({<br/>      principal_id         = string<br/>      principal_type       = optional(string)<br/>      role_definition_name = optional(string, "Virtual Machine User Login")<br/>    })), {})<br/>    tags = optional(map(string), {})<br/>    # FSLogix: override profile share paths per session host group.<br/>    # When null, the root fslogix_storage module share path is used (if fslogix_storage is set).<br/>    fslogix_profile_share_paths = optional(list(string))<br/>  }))</pre> | `{}` | no |
+| <a name="input_scaling_plans"></a> [scaling\_plans](#input\_scaling\_plans) | (Optional) Map of Azure Virtual Desktop scaling plans. Each plan references host pools by key from host\_pools. When one or more scaling plans are defined, the Azure Virtual Desktop service principal is automatically granted the `Desktop Virtualization Power On Off Contributor` role at subscription scope. | <pre>map(object({<br/>    name           = string<br/>    friendly_name  = optional(string)<br/>    description    = optional(string)<br/>    host_pool_type = optional(string, "Pooled")<br/>    time_zone      = optional(string, "UTC")<br/>    host_pool_references = optional(list(object({<br/>      host_pool_key = string<br/>      enabled       = optional(bool, true)<br/>    })), [])<br/>    schedules = optional(list(any), [])<br/>  }))</pre> | `{}` | no |
 | <a name="input_subnets"></a> [subnets](#input\_subnets) | (Optional) Subnets to create in the existing virtual network. A subnet can optionally attach to a created network security group using network\_security\_group\_key. | <pre>map(object({<br/>    name                                          = string<br/>    address_prefixes                              = list(string)<br/>    network_security_group_key                    = optional(string)<br/>    service_endpoints                             = optional(list(string), [])<br/>    delegation_name                               = optional(string)<br/>    delegation_service_name                       = optional(string)<br/>    private_endpoint_network_policies_enabled     = optional(bool, true)<br/>    private_link_service_network_policies_enabled = optional(bool, true)<br/>  }))</pre> | `{}` | no |
 | <a name="input_tags"></a> [tags](#input\_tags) | (Optional) A map of tags to add to the resources | `map(string)` | `null` | no |
 | <a name="input_virtual_network_name"></a> [virtual\_network\_name](#input\_virtual\_network\_name) | (Required) The name of the existing virtual network used for Azure Virtual Desktop supporting resources. | `string` | n/a | yes |
 | <a name="input_virtual_network_resource_group_name"></a> [virtual\_network\_resource\_group\_name](#input\_virtual\_network\_resource\_group\_name) | (Required) The name of the resource group containing the existing virtual network. | `string` | n/a | yes |
-| <a name="input_workspaces"></a> [workspaces](#input\_workspaces) | (Optional) Azure Virtual Desktop workspaces to create. Application groups are associated using application\_groups[*].workspace\_key. | <pre>map(object({<br/>    name                          = string<br/>    friendly_name                 = optional(string)<br/>    description                   = optional(string)<br/>    public_network_access_enabled = optional(bool, false)<br/>    diagnostic_log_category_group = optional(string, "allLogs")<br/>    private_endpoints = optional(list(object({<br/>      subnet_key        = string<br/>      subresource_names = optional(list(string), ["feed"])<br/>    })), [])<br/>  }))</pre> | `{}` | no |
+| <a name="input_workspaces"></a> [workspaces](#input\_workspaces) | (Optional) Azure Virtual Desktop workspaces to create. Application groups are associated using application\_groups[*].workspace\_key. | <pre>map(object({<br/>    name                          = string<br/>    friendly_name                 = optional(string)<br/>    description                   = optional(string)<br/>    public_network_access_enabled = optional(bool, false)<br/>    diagnostic_log_category_group = optional(string, "allLogs")<br/>  }))</pre> | `{}` | no |
 
 ## Outputs
 
@@ -132,8 +212,6 @@ End-user AVD authentication uses Entra ID SSO (`enablerdsaadauth:i:1`) and does 
 | <a name="output_resource_group_name"></a> [resource\_group\_name](#output\_resource\_group\_name) | n/a |
 | <a name="output_scaling_plan_ids"></a> [scaling\_plan\_ids](#output\_scaling\_plan\_ids) | Map of scaling plan keys to resource IDs. |
 | <a name="output_scaling_plan_names"></a> [scaling\_plan\_names](#output\_scaling\_plan\_names) | Map of scaling plan keys to resource names. |
-| <a name="output_session_host_admin_passwords"></a> [session\_host\_admin\_passwords](#output\_session\_host\_admin\_passwords) | Sensitive map of generated or supplied local administrator passwords for session hosts. |
-| <a name="output_session_hosts"></a> [session\_hosts](#output\_session\_hosts) | Map of Azure VM-based AVD session hosts keyed by session\_hosts entry and instance number. |
 | <a name="output_subnet_ids"></a> [subnet\_ids](#output\_subnet\_ids) | n/a |
 | <a name="output_workspace_application_group_associations"></a> [workspace\_application\_group\_associations](#output\_workspace\_application\_group\_associations) | Map of workspace-to-application-group associations keyed by workspace\_key.application\_group\_key. |
 | <a name="output_workspaces"></a> [workspaces](#output\_workspaces) | Map of Azure Virtual Desktop workspaces keyed by var.workspaces. |
