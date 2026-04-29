@@ -130,6 +130,20 @@ module "workspaces" {
   enable_diagnostics            = var.manage_diagnostic_settings && length(var.log_analytics_workspaces) > 0
 }
 
+resource "random_string" "session_host_name_suffix" {
+  for_each = {
+    for key, instance in local.session_host_instances : key => instance
+    if instance.random_name_suffix_enabled
+  }
+
+  length      = each.value.random_name_suffix_length
+  upper       = false
+  lower       = true
+  special     = false
+  numeric     = true
+  min_numeric = 1
+}
+
 module "session_hosts" {
   for_each = local.session_host_instances
   source   = "./modules/session_host"
@@ -139,13 +153,31 @@ module "session_hosts" {
     module.networking,
   ]
 
-  resource_group_name                  = azurerm_resource_group.avd_rg.name
-  location                             = azurerm_resource_group.avd_rg.location
-  subnet_id                            = each.value.subnet_id
-  host_pool_id                         = each.value.host_pool_id
-  host_pool_registration_token         = each.value.host_pool_registration_token
-  vm_name                              = each.value.vm_name
-  computer_name                        = each.value.computer_name
+  resource_group_name          = azurerm_resource_group.avd_rg.name
+  location                     = azurerm_resource_group.avd_rg.location
+  subnet_id                    = each.value.subnet_id
+  host_pool_id                 = each.value.host_pool_id
+  host_pool_registration_token = each.value.host_pool_registration_token
+  vm_name = each.value.random_name_suffix_enabled ? format(
+    "%s-%s-%02d",
+    substr(each.value.vm_name_prefix, 0, 60 - each.value.random_name_suffix_length),
+    random_string.session_host_name_suffix[each.key].result,
+    each.value.instance_number
+    ) : format(
+    "%s-%02d",
+    each.value.vm_name_prefix,
+    each.value.instance_number
+  )
+  computer_name = each.value.random_name_suffix_enabled ? format(
+    "%s%s%02d",
+    substr(each.value.computer_name_prefix, 0, 13 - each.value.random_name_suffix_length),
+    random_string.session_host_name_suffix[each.key].result,
+    each.value.instance_number
+    ) : format(
+    "%s%02d",
+    substr(each.value.computer_name_prefix, 0, 13),
+    each.value.instance_number
+  )
   size                                 = each.value.size
   join_type                            = each.value.join_type
   admin_username                       = each.value.admin_username

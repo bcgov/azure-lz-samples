@@ -14,6 +14,7 @@ host_pools = {
     friendly_name          = "e833c2 Public Host Pool"
     validation_environment = false
     public_network_access  = "EnabledForClientsOnly"
+    load_balancer_type     = "DepthFirst"
   }
 }
 
@@ -233,12 +234,14 @@ application_groups = {
 
 session_hosts = {
   pooled_public = {
-    host_pool_key        = "pooled_public"
-    subnet_key           = "avd_session_hosts"
-    instance_count       = 1
-    vm_name_prefix       = "vm-e833c2-avdpubsh"
-    computer_name_prefix = "avdpubsh"
-    size                 = "Standard_D4ds_v4"
+    host_pool_key              = "pooled_public"
+    subnet_key                 = "avd_session_hosts"
+    instance_count             = 1
+    vm_name_prefix             = "vm-e833c2-avdpu2sh"
+    computer_name_prefix       = "avdpu2sh"
+    random_name_suffix_enabled = true
+    random_name_suffix_length  = 4
+    size                       = "Standard_D4ds_v4"
     vm_role_assignments = {
       avd_admins = {
         principal_id         = "26c9d2b5-dc78-460f-9b5c-4ae442ab5697"

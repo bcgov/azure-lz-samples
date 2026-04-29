@@ -11,23 +11,11 @@ terraform {
 }
 
 locals {
-  admin_password = coalesce(var.admin_password, random_password.admin[0].result)
+  admin_password                = coalesce(var.admin_password, random_password.admin[0].result)
+  registration_force_update_tag = substr(sha256(nonsensitive(var.host_pool_registration_token)), 0, 16)
 
-  registration_script = <<-EOT
-    $ProgressPreference = 'SilentlyContinue'
-    [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
-    $agentInstaller = Join-Path $env:TEMP 'Microsoft.RDInfra.RDAgent.Installer-x64.msi'
-    $bootLoaderInstaller = Join-Path $env:TEMP 'Microsoft.RDInfra.RDAgentBootLoader.Installer-x64.msi'
-    Invoke-WebRequest -Uri 'https://go.microsoft.com/fwlink/?linkid=2310011' -OutFile $agentInstaller
-    Invoke-WebRequest -Uri 'https://go.microsoft.com/fwlink/?linkid=2311028' -OutFile $bootLoaderInstaller
-    Start-Process msiexec.exe -ArgumentList @('/i', $agentInstaller, '/quiet', '/qn', '/norestart', '/passive', 'REGISTRATIONTOKEN=${var.host_pool_registration_token != null ? var.host_pool_registration_token : ""}') -Wait -NoNewWindow
-    Start-Process msiexec.exe -ArgumentList @('/i', $bootLoaderInstaller, '/quiet', '/qn', '/norestart', '/passive') -Wait -NoNewWindow
-  EOT
-
-  registration_command = format(
-    "powershell.exe -ExecutionPolicy Bypass -EncodedCommand %s",
-    textencodebase64(local.registration_script, "UTF-16LE")
-  )
+  # Keep command size below Windows cmdline limit for CustomScriptExtension.
+  registration_command = "powershell.exe -ExecutionPolicy Bypass -Command \"$ErrorActionPreference='Stop';[Net.ServicePointManager]::SecurityProtocol=[Net.SecurityProtocolType]::Tls12;$t='${var.host_pool_registration_token}';if([string]::IsNullOrWhiteSpace($t)){throw 'Host pool registration token is empty.'};$a=Join-Path $env:TEMP 'Microsoft.RDInfra.RDAgent.Installer-x64.msi';$b=Join-Path $env:TEMP 'Microsoft.RDInfra.RDAgentBootLoader.Installer-x64.msi';Invoke-WebRequest -Uri 'https://go.microsoft.com/fwlink/?linkid=2310011' -OutFile $a -UseBasicParsing;Invoke-WebRequest -Uri 'https://go.microsoft.com/fwlink/?linkid=2311028' -OutFile $b -UseBasicParsing;$p=Start-Process 'msiexec.exe' -ArgumentList ('/i \"{0}\" /qn /norestart REGISTRATIONTOKEN={1}' -f $a,$t) -Wait -NoNewWindow -PassThru;if($p.ExitCode -notin @(0,1641,3010)){throw \"RDAgent install failed: $($p.ExitCode)\"};$q=Start-Process 'msiexec.exe' -ArgumentList ('/i \"{0}\" /qn /norestart' -f $b) -Wait -NoNewWindow -PassThru;if($q.ExitCode -notin @(0,1641,3010)){throw \"BootLoader install failed: $($q.ExitCode)\"};Set-Service -Name 'RDAgentBootLoader' -StartupType Automatic;Start-Service -Name 'RDAgentBootLoader' -ErrorAction SilentlyContinue;Restart-Service -Name 'RDAgentBootLoader' -Force\""
 }
 
 resource "random_password" "admin" {
@@ -140,7 +128,13 @@ resource "azurerm_virtual_machine_extension" "aad_login" {
   tags                       = var.tags
 
   lifecycle {
-    ignore_changes = [tags]
+    ignore_changes = [
+      tags,
+      # Registration token refreshes can trigger timestamp/command drift with
+      # no functional change after initial successful host registration.
+      settings,
+      protected_settings,
+    ]
   }
 }
 
@@ -151,6 +145,9 @@ resource "azurerm_virtual_machine_extension" "avd_registration" {
   type                       = "CustomScriptExtension"
   type_handler_version       = "1.10"
   auto_upgrade_minor_version = true
+  settings = jsonencode({
+    timestamp = local.registration_force_update_tag
+  })
   protected_settings = jsonencode({
     commandToExecute = local.registration_command
   })
@@ -161,7 +158,7 @@ resource "azurerm_virtual_machine_extension" "avd_registration" {
   ]
 
   lifecycle {
-    ignore_changes = [protected_settings, settings, tags]
+    ignore_changes = [tags]
   }
 }
 

@@ -210,8 +210,11 @@ locals {
         host_pool_id                         = module.host_pools[session_host.host_pool_key].id
         host_pool_registration_token         = module.host_pools[session_host.host_pool_key].registration_token
         subnet_id                            = contains(keys(var.subnets), session_host.subnet_key) ? module.networking.subnet_ids[session_host.subnet_key] : var.existing_subnet_ids[session_host.subnet_key]
-        vm_name                              = format("%s-%02d", coalesce(try(session_host.vm_name_prefix, null), replace(lower(session_host_key), "/[^0-9a-z-]/", "-")), index + 1)
-        computer_name                        = format("%s%02d", substr(coalesce(try(session_host.computer_name_prefix, null), replace(lower(session_host_key), "/[^0-9a-z]/", "")), 0, 13), index + 1)
+        instance_number                      = index + 1
+        vm_name_prefix                       = coalesce(try(session_host.vm_name_prefix, null), replace(lower(session_host_key), "/[^0-9a-z-]/", "-"))
+        computer_name_prefix                 = coalesce(try(session_host.computer_name_prefix, null), replace(lower(session_host_key), "/[^0-9a-z]/", ""))
+        random_name_suffix_enabled           = coalesce(try(session_host.random_name_suffix_enabled, null), false)
+        random_name_suffix_length            = coalesce(try(session_host.random_name_suffix_length, null), 4)
         size                                 = coalesce(try(session_host.size, null), local.session_host_defaults.size)
         join_type                            = coalesce(try(session_host.join_type, null), local.session_host_defaults.join_type)
         admin_username                       = coalesce(try(session_host.admin_username, null), local.session_host_defaults.admin_username)

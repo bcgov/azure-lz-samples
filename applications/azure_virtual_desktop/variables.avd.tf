@@ -335,6 +335,8 @@ variable "session_hosts" {
     instance_count               = optional(number, 1)
     vm_name_prefix               = optional(string)
     computer_name_prefix         = optional(string)
+    random_name_suffix_enabled   = optional(bool, false)
+    random_name_suffix_length    = optional(number, 4)
     size                         = optional(string, "Standard_D4ds_v4")
     join_type                    = optional(string, "MicrosoftEntraJoined")
     admin_username               = optional(string, "avdadmin")
@@ -422,6 +424,25 @@ variable "session_hosts" {
       try(session_host.computer_name_prefix, null) == null || can(regex("^[A-Za-z0-9-]{1,13}$", session_host.computer_name_prefix))
     ])
     error_message = "Each session_hosts.computer_name_prefix must use only letters, numbers, and hyphens and stay within 13 characters when set."
+  }
+
+  validation {
+    condition = alltrue([
+      for session_host in values(var.session_hosts) :
+      coalesce(try(session_host.random_name_suffix_length, null), 4) >= 1 &&
+      coalesce(try(session_host.random_name_suffix_length, null), 4) <= 6
+    ])
+    error_message = "Each session_hosts.random_name_suffix_length must be between 1 and 6."
+  }
+
+  validation {
+    condition = alltrue([
+      for session_host in values(var.session_hosts) :
+      coalesce(try(session_host.random_name_suffix_enabled, null), false) == false ||
+      length(coalesce(try(session_host.computer_name_prefix, null), "")) == 0 ||
+      length(session_host.computer_name_prefix) >= (coalesce(try(session_host.random_name_suffix_length, null), 4) + 1)
+    ])
+    error_message = "When random_name_suffix_enabled is true, session_hosts.computer_name_prefix must be at least random_name_suffix_length + 1 characters to stay within the Windows computer name limit."
   }
 
   validation {

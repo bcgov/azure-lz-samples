@@ -31,7 +31,12 @@ resource "azurerm_storage_account" "this" {
   shared_access_key_enabled       = false # Entra identity-based auth only
 
   lifecycle {
-    ignore_changes = [tags]
+    ignore_changes = [
+      tags,
+      # AADKERB is configured via azapi_update_resource and can appear as
+      # perpetual drift on azurerm_storage_account in some provider versions.
+      azure_files_authentication,
+    ]
   }
 }
 
