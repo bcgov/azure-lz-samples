@@ -95,4 +95,9 @@ variable "diagnostic_log_category_group" {
   description = "(Optional) Diagnostic log category group. Only allLogs is supported for storage accounts."
   type        = string
   default     = "allLogs"
+
+  validation {
+    condition     = var.diagnostic_log_category_group == "allLogs"
+    error_message = "diagnostic_log_category_group must be \"allLogs\" for storage accounts."
+  }
 }

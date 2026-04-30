@@ -62,7 +62,7 @@ variable "subnets" {
     service_endpoints                             = optional(list(string), [])
     delegation_name                               = optional(string)
     delegation_service_name                       = optional(string)
-    private_endpoint_network_policies_enabled     = optional(bool, true)
+    private_endpoint_network_policies_enabled     = optional(bool, false)
     private_link_service_network_policies_enabled = optional(bool, true)
   }))
   default = {}
