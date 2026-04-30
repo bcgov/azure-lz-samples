@@ -12,8 +12,8 @@ host_pools = {
   pooled_public = {
     name                   = "e833c2-avd-hp-public"
     friendly_name          = "e833c2 Public Host Pool"
-    validation_environment = false
-    public_network_access  = "EnabledForClientsOnly"
+    validation_environment = true
+    public_network_access  = "Enabled"
     load_balancer_type     = "DepthFirst"
   }
 }
@@ -161,7 +161,7 @@ log_analytics_workspaces = {
 
 # Set to false when diagnostics are created by Azure Policy assignments
 # in the target subscription to prevent diagnostic-setting create conflicts.
-manage_diagnostic_settings = false
+manage_diagnostic_settings = true
 
 # Key Vault (optional)
 # -----------------------------------------------------------------------

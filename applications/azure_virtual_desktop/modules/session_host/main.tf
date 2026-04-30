@@ -158,7 +158,13 @@ resource "azurerm_virtual_machine_extension" "avd_registration" {
   ]
 
   lifecycle {
-    ignore_changes = [tags]
+    ignore_changes = [
+      tags,
+      # Host pool registration token refreshes can update extension payload
+      # timestamps without requiring VM extension reconfiguration.
+      settings,
+      protected_settings,
+    ]
   }
 }
 

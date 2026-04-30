@@ -6,10 +6,10 @@ This module deploys an Azure Virtual Desktop environment into an existing hub-sp
 
 | File | Access model | Host pool | Workspace feed |
 |---|---|---|---|
-| `example.public.tfvars` | Option 1 — public-capable | `EnabledForClientsOnly` | Public (no private endpoint required) |
+| `example.public.tfvars` | Option 1 — public-capable | `Enabled` | Public (no private endpoint required) |
 | `example.private.tfvars` | Option 2 — private-only | `Disabled` + private endpoint | Private endpoint only |
 
-For drift-resistant public deployments, `example.public.tfvars` explicitly sets host pool `public_network_access = "EnabledForClientsOnly"` and `load_balancer_type = "DepthFirst"`.
+For drift-resistant public deployments, `example.public.tfvars` explicitly sets host pool `public_network_access = "Enabled"` and `load_balancer_type = "DepthFirst"`.
 
 ---
 
@@ -71,7 +71,7 @@ End-user (internet)
         └─ Session host (no inbound NSG rule needed)
 ```
 
-The workspace feed is served publicly. The host pool `public_network_access = "EnabledForClientsOnly"` allows clients to reach the broker endpoint without a private endpoint, while session host traffic still uses the reverse-connect gateway.
+The workspace feed is served publicly. The host pool `public_network_access = "Enabled"` allows clients to reach the broker endpoint without a private endpoint, while session host traffic still uses the reverse-connect gateway.
 
 **Option 2 — Private (`example.private.tfvars`)**
 
@@ -203,6 +203,8 @@ When at least one session host is deployed and a Log Analytics Workspace exists,
 
 This uses the Azure Monitor Agent (AMA) pipeline, which Microsoft recommends for new AVD deployments. The VM resource itself only has `boot_diagnostics` (screenshot / serial log) via the session host module — not a `Microsoft.Insights/diagnosticSettings` resource.
 
+In addition, the root module creates **`azapi_resource.session_hosts_dcr_diagnostics`** when diagnostics are enabled so the Data Collection Rule resource itself emits diagnostic logs to the same Log Analytics Workspace.
+
 ### `allLogs` vs `audit` category groups
 
 | Resource type | Supported groups | Module default |
@@ -231,6 +233,7 @@ This uses the Azure Monitor Agent (AMA) pipeline, which Microsoft recommends for
 
 | Name | Version |
 |------|---------|
+| <a name="provider_azapi"></a> [azapi](#provider\_azapi) | 2.9.0 |
 | <a name="provider_azuread"></a> [azuread](#provider\_azuread) | 3.8.0 |
 | <a name="provider_azurerm"></a> [azurerm](#provider\_azurerm) | 4.70.0 |
 | <a name="provider_random"></a> [random](#provider\_random) | 3.8.1 |
@@ -253,6 +256,7 @@ This uses the Azure Monitor Agent (AMA) pipeline, which Microsoft recommends for
 
 | Name | Type |
 |------|------|
+| [azapi_resource.session_hosts_dcr_diagnostics](https://registry.terraform.io/providers/Azure/azapi/latest/docs/resources/resource) | resource |
 | [azurerm_monitor_data_collection_rule.session_hosts](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/monitor_data_collection_rule) | resource |
 | [azurerm_monitor_data_collection_rule_association.session_hosts](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/monitor_data_collection_rule_association) | resource |
 | [azurerm_resource_group.avd_rg](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/resource_group) | resource |

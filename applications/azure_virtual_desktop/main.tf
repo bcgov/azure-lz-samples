@@ -356,6 +356,32 @@ resource "azurerm_monitor_data_collection_rule" "session_hosts" {
   }
 }
 
+resource "azapi_resource" "session_hosts_dcr_diagnostics" {
+  for_each = var.manage_diagnostic_settings && length(var.log_analytics_workspaces) > 0 && length(local.session_host_instances) > 0 ? {
+    enabled = true
+  } : {}
+
+  type      = "Microsoft.Insights/diagnosticSettings@2021-05-01-preview"
+  name      = "diag-${azurerm_monitor_data_collection_rule.session_hosts[0].name}"
+  parent_id = azurerm_monitor_data_collection_rule.session_hosts[0].id
+
+  body = {
+    properties = {
+      workspaceId = local.avd_log_analytics_workspace_id
+      logs = [
+        {
+          categoryGroup = "allLogs"
+          enabled       = true
+          retentionPolicy = {
+            enabled = false
+            days    = 0
+          }
+        }
+      ]
+    }
+  }
+}
+
 resource "azurerm_monitor_data_collection_rule_association" "session_hosts" {
   for_each = length(var.log_analytics_workspaces) > 0 ? local.session_host_instances : {}
 

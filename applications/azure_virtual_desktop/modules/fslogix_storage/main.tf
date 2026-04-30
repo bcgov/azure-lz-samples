@@ -129,9 +129,25 @@ resource "azapi_resource" "diagnostics" {
             enabled = false
             days    = 0
           }
+        },
+        {
+          category = "Capacity"
+          enabled  = false
+          retentionPolicy = {
+            enabled = false
+            days    = 0
+          }
         }
       ]
     }
+  }
+
+  lifecycle {
+    # Azure can normalize diagnostic metric arrays (e.g. disabled Capacity)
+    # causing persistent no-op plan churn for this resource.
+    ignore_changes = [
+      body.properties.metrics,
+    ]
   }
 }
 
@@ -156,6 +172,14 @@ resource "azapi_resource" "diagnostics_file_service" {
             enabled = false
             days    = 0
           }
+        },
+        {
+          categoryGroup = var.diagnostic_log_category_group == "allLogs" ? "audit" : "allLogs"
+          enabled       = false
+          retentionPolicy = {
+            enabled = false
+            days    = 0
+          }
         }
       ]
       metrics = [
@@ -166,8 +190,25 @@ resource "azapi_resource" "diagnostics_file_service" {
             enabled = false
             days    = 0
           }
+        },
+        {
+          category = "Capacity"
+          enabled  = false
+          retentionPolicy = {
+            enabled = false
+            days    = 0
+          }
         }
       ]
     }
+  }
+
+  lifecycle {
+    # Azure can normalize diagnostic log/metric arrays (e.g. disabled audit/
+    # Capacity entries), which results in noisy no-op updates in plans.
+    ignore_changes = [
+      body.properties.logs,
+      body.properties.metrics,
+    ]
   }
 }
