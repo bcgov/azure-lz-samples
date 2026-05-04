@@ -1,10 +1,10 @@
 subscription_id = "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" # This is the subscription ID where the resources will be created (ie. abc123-tools)
 
-virtual_network_name           = "db78da-dev-vwan-spoke"
-virtual_network_resource_group = "db78da-dev-networking"
+virtual_network_name           = "my-vnet-name"
+virtual_network_resource_group = "abc123-dev-networking"
 
-resource_group_name        = "db78da-dev-bastion"
-bastion_host_name          = "db78da-bastion" # NOTE: Will be appended with a random string
+resource_group_name        = "my-rg-bastion"
+bastion_host_name          = "my-bastion" # NOTE: Will be appended with a random string
 location                   = "canadacentral"
 bastionSubnetAddressPrefix = "10.41.14.0/26"
 

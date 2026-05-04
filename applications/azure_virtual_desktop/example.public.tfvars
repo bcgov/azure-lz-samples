@@ -1,0 +1,278 @@
+resource_group_name                 = "my-rg-avd-public"
+location                            = "canadacentral"
+virtual_network_name                = "my-vnet-name"
+virtual_network_resource_group_name = "abc123-dev-networking"
+
+# Option 1: Public-capable user access (minimal public exposure)
+# - Workspace feed is public.
+# - Host pool allows client public access.
+# - Data-plane services (Key Vault, FSLogix storage) remain private via private endpoints.
+
+host_pools = {
+  pooled_public = {
+    name                   = "abc123-avd-hp-public"
+    friendly_name          = "abc123 Public Host Pool"
+    validation_environment = true
+    public_network_access  = "Enabled"
+    load_balancer_type     = "DepthFirst"
+  }
+}
+
+scaling_plans = {
+  pooled_public_daytime = {
+    name          = "sp-abc123-avd-public"
+    friendly_name = "abc123 Public Scaling"
+    exclusion_tag = "excludeFromScaling"
+    host_pool_references = [
+      {
+        host_pool_key = "pooled_public"
+        enabled       = true
+      }
+    ]
+    schedules = [
+      {
+        name                           = "weekday"
+        daysOfWeek                     = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday"]
+        rampUpStartTime                = { hour = 6, minute = 0 }
+        rampUpLoadBalancingAlgorithm   = "BreadthFirst"
+        rampUpMinimumHostsPct          = 20
+        rampUpCapacityThresholdPct     = 70
+        peakStartTime                  = { hour = 8, minute = 0 }
+        peakLoadBalancingAlgorithm     = "BreadthFirst"
+        rampDownStartTime              = { hour = 17, minute = 0 }
+        rampDownLoadBalancingAlgorithm = "DepthFirst"
+        rampDownMinimumHostsPct        = 10
+        rampDownCapacityThresholdPct   = 20
+        rampDownForceLogoffUsers       = false
+        rampDownWaitTimeMinutes        = 30
+        rampDownNotificationMessage    = "Sign out soon to allow planned scale-down."
+        rampDownStopHostsWhen          = "ZeroSessions"
+        offPeakStartTime               = { hour = 20, minute = 0 }
+        offPeakLoadBalancingAlgorithm  = "DepthFirst"
+      }
+    ]
+  }
+}
+
+network_security_groups = {
+  avd_private_endpoints = {
+    name = "nsg-avd-private-endpoints"
+    security_rules = {
+      allow_https_outbound = {
+        priority                   = 100
+        direction                  = "Outbound"
+        access                     = "Allow"
+        protocol                   = "Tcp"
+        source_port_range          = "*"
+        destination_port_range     = "443"
+        source_address_prefix      = "*"
+        destination_address_prefix = "VirtualNetwork"
+      }
+    }
+  }
+
+  avd_session_hosts = {
+    name = "nsg-avd-session-hosts"
+    security_rules = {
+      allow_entra_outbound = {
+        priority                   = 100
+        direction                  = "Outbound"
+        access                     = "Allow"
+        protocol                   = "Tcp"
+        source_port_range          = "*"
+        destination_port_range     = "443"
+        source_address_prefix      = "*"
+        destination_address_prefix = "AzureActiveDirectory"
+      }
+      allow_avd_service_outbound = {
+        priority                   = 110
+        direction                  = "Outbound"
+        access                     = "Allow"
+        protocol                   = "Tcp"
+        source_port_range          = "*"
+        destination_port_range     = "443"
+        source_address_prefix      = "*"
+        destination_address_prefix = "WindowsVirtualDesktop"
+      }
+      allow_monitor_outbound = {
+        priority                   = 120
+        direction                  = "Outbound"
+        access                     = "Allow"
+        protocol                   = "Tcp"
+        source_port_range          = "*"
+        destination_port_range     = "443"
+        source_address_prefix      = "*"
+        destination_address_prefix = "AzureMonitor"
+      }
+      allow_storage_outbound = {
+        priority                   = 130
+        direction                  = "Outbound"
+        access                     = "Allow"
+        protocol                   = "Tcp"
+        source_port_range          = "*"
+        destination_port_range     = "443"
+        source_address_prefix      = "*"
+        destination_address_prefix = "Storage"
+      }
+      allow_internet_https_outbound = {
+        priority                   = 140
+        direction                  = "Outbound"
+        access                     = "Allow"
+        protocol                   = "Tcp"
+        source_port_range          = "*"
+        destination_port_range     = "443"
+        source_address_prefix      = "*"
+        destination_address_prefix = "Internet"
+      }
+      allow_kms_activation_outbound = {
+        priority                   = 150
+        direction                  = "Outbound"
+        access                     = "Allow"
+        protocol                   = "Tcp"
+        source_port_range          = "*"
+        destination_port_range     = "1688"
+        source_address_prefix      = "*"
+        destination_address_prefix = "Internet"
+      }
+    }
+  }
+}
+
+subnets = {
+  avd_private_endpoints = {
+    name                       = "snet-avd-private-endpoints"
+    address_prefixes           = ["10.41.9.32/27"]
+    network_security_group_key = "avd_private_endpoints"
+  }
+
+  avd_session_hosts = {
+    name                       = "snet-avd-session-hosts"
+    address_prefixes           = ["10.41.9.64/26"]
+    network_security_group_key = "avd_session_hosts"
+  }
+}
+
+log_analytics_workspaces = {
+  avd = {
+    name              = "law-abc123-avd-public"
+    retention_in_days = 90
+  }
+}
+
+# Set to false when diagnostics are created by Azure Policy assignments
+# in the target subscription to prevent diagnostic-setting create conflicts.
+manage_diagnostic_settings = true
+
+# Key Vault (optional)
+# -----------------------------------------------------------------------
+# Key Vault is NOT required for a functional AVD deployment.
+# Its sole purpose in this module is to store the session host local admin
+# credentials (AVD-Local-Admin-Username / AVD-Local-Admin-Password) as
+# Key Vault secrets when create_local_admin_secrets = true.
+#
+# DEPLOYMENT CONSTRAINT — private runner required:
+#   The vault is always created with public_network_access_enabled = false.
+#   When create_local_admin_secrets = true, Terraform must write secrets to
+#   the vault over its private endpoint. This requires the pipeline or CLI
+#   session to run from inside the private network (e.g. a self-hosted
+#   GitHub/ADO runner or Azure Bastion jump host that has DNS resolution
+#   for privatelink.vaultcore.azure.net and line-of-sight to the
+#   avd_private_endpoints subnet). Running from a public GitHub-hosted
+#   runner will fail at secret creation.
+#
+# When create_local_admin_secrets = false (default):
+#   The vault is provisioned but no secrets are written. The local admin
+#   password is still auto-generated and stored only in Terraform state.
+#   In this case the vault provides no active value and can be safely
+#   omitted by removing this block entirely (key_vaults = {}).
+#
+# End-user authentication uses Entra ID SSO — local admin credentials are
+# for emergency VM console access only.
+key_vaults = {
+  avd = {
+    name                        = "kv-abc123-avd-public"
+    create_local_admin_secrets  = false # set true only from a private runner
+    private_endpoint_subnet_key = "avd_private_endpoints"
+  }
+}
+
+workspaces = {
+  public = {
+    name                          = "ws-abc123-avd-public"
+    friendly_name                 = "abc123 Public AVD Workspace"
+    public_network_access_enabled = true
+  }
+}
+
+application_groups = {
+  desktop_public = {
+    name          = "dag-abc123-avd-desktop-public"
+    friendly_name = "abc123 Public Desktop Group"
+    type          = "Desktop"
+    host_pool_key = "pooled_public"
+    workspace_key = "public"
+
+    # ---------------------------------------------------------------------------
+    # assignments — optional. Grant principals the Desktop Virtualization User
+    # role on this application group, which allows them to see and launch the
+    # desktop or app in the AVD client. Omit the block entirely to skip.
+    #
+    # Each map key is a stable Terraform identity (any unique string).
+    # principal_type: "User", "Group", or "ServicePrincipal" (optional but
+    #   recommended — speeds up role assignment creation).
+    # role_definition_name: defaults to "Desktop Virtualization User" if omitted.
+    # ---------------------------------------------------------------------------
+    assignments = {
+      avd_users = {
+        principal_id         = "26c9d2b5-dc78-460f-9b5c-4ae442ab5697" # PIM_DO_PuC_Dev_Infra_R_RE
+        principal_type       = "Group"
+        role_definition_name = "Desktop Virtualization User" # default
+      }
+    }
+  }
+}
+
+session_hosts = {
+  pooled_public = {
+    host_pool_key              = "pooled_public"
+    subnet_key                 = "avd_session_hosts"
+    instance_count             = 1
+    vm_name_prefix             = "vm-abc123-avdpu2sh"
+    computer_name_prefix       = "avdpu2sh"
+    random_name_suffix_enabled = true
+    random_name_suffix_length  = 4
+    size                       = "Standard_D4ds_v4"
+    vm_role_assignments = {
+      avd_admins = {
+        principal_id         = "26c9d2b5-dc78-460f-9b5c-4ae442ab5697"
+        principal_type       = "Group"
+        role_definition_name = "Virtual Machine Administrator Login"
+      }
+    }
+  }
+}
+
+# FSLogix profile storage
+# -----------------------------------------------------------------------
+# Provisions a Premium ZRS Azure Files account with Entra Kerberos auth,
+# a profiles share, a private endpoint on the AVD private-endpoint subnet,
+# and Storage File Data SMB Share Contributor for each session host VM identity.
+# Session hosts are automatically configured via a VM run command on first apply.
+#
+# The storage account is always private (public_network_access_enabled = false).
+# This is consistent with Option 1 — user access to the workspace feed and
+# host pool broker is public, but backend data-plane services remain private.
+#
+# Rename the storage account to a globally unique 3-24 lowercase alphanumeric name.
+fslogix_storage = {
+  name                        = "stfslogixabc123pub" # 3-24 lowercase alphanumeric; globally unique.
+  private_endpoint_subnet_key = "avd_private_endpoints"
+  account_tier                = "Premium"
+  account_replication_type    = "ZRS"
+  share_name                  = "profiles"
+  share_quota_gb              = 1024
+
+  # Optional: add Entra user/group object IDs for SMB Share Contributor
+  # (required for NTFS permission management on the share). Leave empty for VM-only access.
+  # smb_contributor_principal_ids = ["<group-or-user-object-id>"]
+}
