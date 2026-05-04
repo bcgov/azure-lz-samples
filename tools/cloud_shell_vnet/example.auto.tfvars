@@ -1,4 +1,4 @@
-virtual_network_name           = "abc123-dev-vwan-spoke"
+virtual_network_name           = "my-vnet-name"
 virtual_network_resource_group = "abc123-dev-networking"
 
 containerSubnetName = "cloudshellsubnet"

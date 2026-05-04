@@ -1,8 +1,8 @@
-resource_group_name = "managed-devops-pools"
+resource_group_name = "my-rg-managed-devops-pools"
 location            = "Canada Central"
 
 virtual_network_resource_group            = "abc123-dev-networking"
-virtual_network_name                      = "abc123-dev-vwan-spoke"
+virtual_network_name                      = "my-vnet-name"
 managed_devops_pool_subnet_name           = "devops-pool"
 managed_devops_pool_subnet_address_prefix = "10.41.0.0/28"
 

@@ -1,7 +1,7 @@
-resource_group_name                 = "e833c2-dev-avd-private"
+resource_group_name                 = "my-rg-avd-private"
 location                            = "canadacentral"
-virtual_network_name                = "e833c2-dev-vwan-spoke"
-virtual_network_resource_group_name = "e833c2-dev-networking"
+virtual_network_name                = "my-vnet-name"
+virtual_network_resource_group_name = "abc123-dev-networking"
 
 # Option 2: Private-only user access
 # - Workspace feed is private endpoint only.
@@ -10,8 +10,8 @@ virtual_network_resource_group_name = "e833c2-dev-networking"
 
 host_pools = {
   pooled_private = {
-    name                   = "e833c2-avd-hp-private"
-    friendly_name          = "e833c2 Private Host Pool"
+    name                   = "abc123-avd-hp-private"
+    friendly_name          = "abc123 Private Host Pool"
     validation_environment = false
     public_network_access  = "Disabled"
     private_endpoints = [
@@ -25,8 +25,8 @@ host_pools = {
 
 scaling_plans = {
   pooled_private_daytime = {
-    name          = "sp-e833c2-avd-private"
-    friendly_name = "e833c2 Private Scaling"
+    name          = "sp-abc123-avd-private"
+    friendly_name = "abc123 Private Scaling"
     exclusion_tag = "excludeFromScaling"
     host_pool_references = [
       {
@@ -159,7 +159,7 @@ subnets = {
 
 log_analytics_workspaces = {
   avd = {
-    name              = "law-e833c2-avd-private"
+    name              = "law-abc123-avd-private"
     retention_in_days = 90
   }
 }
@@ -198,7 +198,7 @@ manage_diagnostic_settings = false
 # for emergency VM console access only.
 key_vaults = {
   avd = {
-    name                        = "kv-e833c2-avd-private"
+    name                        = "kv-abc123-avd-private"
     create_local_admin_secrets  = false # set true only from a private runner
     private_endpoint_subnet_key = "avd_private_endpoints"
   }
@@ -206,8 +206,8 @@ key_vaults = {
 
 workspaces = {
   private = {
-    name                          = "ws-e833c2-avd-private"
-    friendly_name                 = "e833c2 Private AVD Workspace"
+    name                          = "ws-abc123-avd-private"
+    friendly_name                 = "abc123 Private AVD Workspace"
     public_network_access_enabled = false
     private_endpoints = [
       {
@@ -220,8 +220,8 @@ workspaces = {
 
 application_groups = {
   desktop_private = {
-    name          = "dag-e833c2-avd-desktop-private"
-    friendly_name = "e833c2 Private Desktop Group"
+    name          = "dag-abc123-avd-desktop-private"
+    friendly_name = "abc123 Private Desktop Group"
     type          = "Desktop"
     host_pool_key = "pooled_private"
     workspace_key = "private"
@@ -251,7 +251,7 @@ session_hosts = {
     host_pool_key        = "pooled_private"
     subnet_key           = "avd_session_hosts"
     instance_count       = 1
-    vm_name_prefix       = "vm-e833c2-avdprvsh"
+    vm_name_prefix       = "vm-abc123-avdprvsh"
     computer_name_prefix = "avdprvsh"
     size                 = "Standard_D4ds_v4"
     vm_role_assignments = {

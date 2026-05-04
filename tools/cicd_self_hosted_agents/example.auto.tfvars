@@ -1,17 +1,17 @@
 subscription_id = "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" # This is the subscription ID where the resources will be created (ie. abc123-tools)
 
-resource_group_name = "caf-ghr"
+resource_group_name = "my-rg-self-hosted-agents"
 location            = "Canada Central"
 
-postfix = "ghr"
+postfix = "myenv"
 
 version_control_system_type         = "github"
 version_control_system_organization = "bcgov-c"   # The organization name in the version control system
 version_control_system_repository   = "REPO_NAME" # The repository name in the version control system
 # export TF_VAR_github_personal_access_token=<your_github_personal_access_token>
 
-existing_virtual_network_resource_group_name = "abc123-tools-networking" # Existing Virtual Network Resource Group Name (ie. abc123-tools-networking)
-existing_virtual_network_name                = "abc123-tools-vwan-spoke" # Existing Virtual Network Name (ie. abc123-tools-vwan-spoke)
+existing_virtual_network_resource_group_name = "abc123-dev-networking" # Existing Virtual Network Resource Group Name (ie. abc123-dev-networking)
+existing_virtual_network_name                = "my-vnet-name"          # Existing Virtual Network Name (ie. my-vnet-name)
 
 container_app_subnet_name           = "ghr-aca"
 container_app_subnet_address_prefix = "10.41.4.64/27" # must be a minimum size of `/27`

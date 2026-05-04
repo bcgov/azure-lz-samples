@@ -1,12 +1,12 @@
-resource_group_name                 = "e833c2-dev-avd"
+resource_group_name                 = "my-rg-avd"
 location                            = "canadacentral"
-virtual_network_name                = "e833c2-dev-vwan-spoke"
-virtual_network_resource_group_name = "e833c2-dev-networking"
+virtual_network_name                = "my-vnet-name"
+virtual_network_resource_group_name = "abc123-dev-networking"
 
 host_pools = {
   pooled_primary = {
-    name          = "e833c2-avd-hostpool"
-    friendly_name = "e833c2 Primary Host Pool"
+    name          = "abc123-avd-hostpool"
+    friendly_name = "abc123 Primary Host Pool"
     # Cannot be changed to true while a host-pool private endpoint exists.
     # To enable later: remove host pool private endpoint(s), update this to true, apply, then recreate endpoint(s).
     validation_environment = false
@@ -20,7 +20,7 @@ host_pools = {
   }
 
   # validation_and_shortpath_example = {
-  #   name                             = "e833c2-avd-validation"
+  #   name                             = "abc123-avd-validation"
   #   validation_environment           = true
   #   public_network_access            = "Enabled"
   #   public_udp                       = "Enabled" # RDP Shortpath for public networks (via STUN)
@@ -31,7 +31,7 @@ host_pools = {
   # }
 
   # rdp_properties_example = {
-  #   name = "e833c2-avd-rdp-example"
+  #   name = "abc123-avd-rdp-example"
   #   rdp_properties = {
   #     connections = {
   #       credential_security_support_provider = "EnabledIfSupported"
@@ -73,13 +73,13 @@ host_pools = {
   # }
 
   # personal_example = {
-  #   name                             = "db78da-avd-personal"
+  #   name                             = "abc123-avd-personal"
   #   host_pool_type                   = "Personal"
   #   personal_desktop_assignment_type = "Automatic"
   # }
 
   # scheduled_updates_example = {
-  #   name        = "db78da-avd-scheduled"
+  #   name        = "abc123-avd-scheduled"
   #   description = "Private-only AVD host pool"
   #   agent_update = {
   #     type                         = "Scheduled"
@@ -97,8 +97,8 @@ host_pools = {
 
 scaling_plans = {
   pooled_daytime = {
-    name          = "sp-e833c2-avd-pooled"
-    friendly_name = "e833c2 Daytime Scaling"
+    name          = "sp-abc123-avd-pooled"
+    friendly_name = "abc123 Daytime Scaling"
     exclusion_tag = "excludeFromScaling"
     host_pool_references = [
       {
@@ -254,14 +254,14 @@ subnets = {
 ### Supporting resources
 log_analytics_workspaces = {
   avd = {
-    name              = "law-e833c2-avd"
+    name              = "law-abc123-avd"
     retention_in_days = 90
   }
 }
 
 key_vaults = {
   avd = {
-    name                        = "kv-e833c2-avd"
+    name                        = "kv-abc123-avd"
     create_local_admin_secrets  = false
     private_endpoint_subnet_key = "avd_private_endpoints"
   }
@@ -280,8 +280,8 @@ key_vaults = {
 
 workspaces = {
   primary = {
-    name          = "ws-e833c2-avd"
-    friendly_name = "e833c2 AVD Workspace"
+    name          = "ws-abc123-avd"
+    friendly_name = "abc123 AVD Workspace"
     private_endpoints = [
       {
         subnet_key        = "avd_private_endpoints"
@@ -291,7 +291,7 @@ workspaces = {
   }
 
   # global_feed_discovery_example = {
-  #   name = "ws-e833c2-avd-global"
+  #   name = "ws-abc123-avd-global"
   #   private_endpoints = [
   #     {
   #       subnet_key        = "avd_private_endpoints"
@@ -303,15 +303,15 @@ workspaces = {
 
 application_groups = {
   desktop = {
-    name          = "dag-e833c2-avd-desktop"
-    friendly_name = "e833c2 Desktop Group"
+    name          = "dag-abc123-avd-desktop"
+    friendly_name = "abc123 Desktop Group"
     type          = "Desktop"
     host_pool_key = "pooled_primary"
     workspace_key = "primary"
   }
 
   # remoteapp_with_assignments_example = {
-  #   name          = "rag-e833c2-avd-apps"
+  #   name          = "rag-abc123-avd-apps"
   #   type          = "RailApplications"
   #   host_pool_key = "pooled_primary"
   #   workspace_key = "primary"
@@ -333,7 +333,7 @@ session_hosts = {
     host_pool_key        = "pooled_primary"
     subnet_key           = "avd_session_hosts"
     instance_count       = 1
-    vm_name_prefix       = "vm-e833c2-avdsh"
+    vm_name_prefix       = "vm-abc123-avdsh"
     computer_name_prefix = "avdsh"
     size                 = "Standard_D4ds_v4"
     # tags = { excludeFromScaling = "true" } # Optional: align with scaling_plans[*].exclusion_tag.
@@ -351,7 +351,7 @@ session_hosts = {
 #   host_pool_key        = "pooled_primary"
 #   subnet_key           = "avd_session_hosts"
 #   instance_count       = 3
-#   vm_name_prefix       = "vm-e833c2-avdsh"
+#   vm_name_prefix       = "vm-abc123-avdsh"
 #   computer_name_prefix = "avdsh"
 #   size                 = "Standard_D8ds_v5"
 #
@@ -420,7 +420,7 @@ session_hosts = {
 ### Storage File Data SMB Share Contributor for each session host VM identity.
 ### Session hosts are automatically configured via a VM run command on first apply.
 fslogix_storage = {
-  name                        = "stfslogixe833c2avd" # 3-24 lowercase alphanumeric; globally unique.
+  name                        = "stfslogixabc123avd" # 3-24 lowercase alphanumeric; globally unique.
   private_endpoint_subnet_key = "avd_private_endpoints"
   account_tier                = "Premium"
   account_replication_type    = "ZRS"

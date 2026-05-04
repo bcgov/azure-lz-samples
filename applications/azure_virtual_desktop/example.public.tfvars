@@ -1,7 +1,7 @@
-resource_group_name                 = "e833c2-dev-avd-public"
+resource_group_name                 = "my-rg-avd-public"
 location                            = "canadacentral"
-virtual_network_name                = "e833c2-dev-vwan-spoke"
-virtual_network_resource_group_name = "e833c2-dev-networking"
+virtual_network_name                = "my-vnet-name"
+virtual_network_resource_group_name = "abc123-dev-networking"
 
 # Option 1: Public-capable user access (minimal public exposure)
 # - Workspace feed is public.
@@ -10,8 +10,8 @@ virtual_network_resource_group_name = "e833c2-dev-networking"
 
 host_pools = {
   pooled_public = {
-    name                   = "e833c2-avd-hp-public"
-    friendly_name          = "e833c2 Public Host Pool"
+    name                   = "abc123-avd-hp-public"
+    friendly_name          = "abc123 Public Host Pool"
     validation_environment = true
     public_network_access  = "Enabled"
     load_balancer_type     = "DepthFirst"
@@ -20,8 +20,8 @@ host_pools = {
 
 scaling_plans = {
   pooled_public_daytime = {
-    name          = "sp-e833c2-avd-public"
-    friendly_name = "e833c2 Public Scaling"
+    name          = "sp-abc123-avd-public"
+    friendly_name = "abc123 Public Scaling"
     exclusion_tag = "excludeFromScaling"
     host_pool_references = [
       {
@@ -154,7 +154,7 @@ subnets = {
 
 log_analytics_workspaces = {
   avd = {
-    name              = "law-e833c2-avd-public"
+    name              = "law-abc123-avd-public"
     retention_in_days = 90
   }
 }
@@ -190,7 +190,7 @@ manage_diagnostic_settings = true
 # for emergency VM console access only.
 key_vaults = {
   avd = {
-    name                        = "kv-e833c2-avd-public"
+    name                        = "kv-abc123-avd-public"
     create_local_admin_secrets  = false # set true only from a private runner
     private_endpoint_subnet_key = "avd_private_endpoints"
   }
@@ -198,16 +198,16 @@ key_vaults = {
 
 workspaces = {
   public = {
-    name                          = "ws-e833c2-avd-public"
-    friendly_name                 = "e833c2 Public AVD Workspace"
+    name                          = "ws-abc123-avd-public"
+    friendly_name                 = "abc123 Public AVD Workspace"
     public_network_access_enabled = true
   }
 }
 
 application_groups = {
   desktop_public = {
-    name          = "dag-e833c2-avd-desktop-public"
-    friendly_name = "e833c2 Public Desktop Group"
+    name          = "dag-abc123-avd-desktop-public"
+    friendly_name = "abc123 Public Desktop Group"
     type          = "Desktop"
     host_pool_key = "pooled_public"
     workspace_key = "public"
@@ -237,7 +237,7 @@ session_hosts = {
     host_pool_key              = "pooled_public"
     subnet_key                 = "avd_session_hosts"
     instance_count             = 1
-    vm_name_prefix             = "vm-e833c2-avdpu2sh"
+    vm_name_prefix             = "vm-abc123-avdpu2sh"
     computer_name_prefix       = "avdpu2sh"
     random_name_suffix_enabled = true
     random_name_suffix_length  = 4
@@ -265,7 +265,7 @@ session_hosts = {
 #
 # Rename the storage account to a globally unique 3-24 lowercase alphanumeric name.
 fslogix_storage = {
-  name                        = "stfslogixe833c2pub" # 3-24 lowercase alphanumeric; globally unique.
+  name                        = "stfslogixabc123pub" # 3-24 lowercase alphanumeric; globally unique.
   private_endpoint_subnet_key = "avd_private_endpoints"
   account_tier                = "Premium"
   account_replication_type    = "ZRS"
