@@ -1,0 +1,19 @@
+{
+  "environment": {
+    "example": {
+      "description": "Example environment for policy documentation",
+      "wiki": {
+        "platform": {
+          "title": "Policy Documentation",
+          "gitRepository": "https://github.com/your-org/your-org.wiki.git",
+          "gitPlatform": "github",
+          "gitBranch": "master",
+          "gitUserName": "AzPolicyLens Pipeline",
+          "gitUserEmail": "policydoc@example.com",
+          "pageStyle": "detailed",
+          "childManagementGroupId": "your-management-group-id"
+        }
+      }
+    }
+  }
+}

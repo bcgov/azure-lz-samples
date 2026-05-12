@@ -1,0 +1,134 @@
+name: Policy Documentation
+
+on:
+  # schedule:
+  #   - cron: '30 5,21 * * *' # everyday at 05:30 & 21:30 UTC (AEST offset handled by users)
+  workflow_dispatch:
+    # allows a manual run from the UI
+    inputs:
+      environment:
+        description: "AzPolicyLens environment key to parse from github-config.jsonc"
+        type: string
+        default: example
+      topLevelManagementGroupName:
+        description: "Top-level management group to discover policy assignments from"
+        type: string
+        default: your-management-group-id
+      buildArtifactName:
+        description: "Artifact name used for discovery output"
+        type: string
+        default: policy_doc
+      debug:
+        description: "Enable debug logging"
+        type: boolean
+        default: false
+
+permissions:
+  id-token: write
+  contents: write
+
+concurrency:
+  group: policy-documentation-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  ACTIONS_STEP_DEBUG: ${{ inputs.debug }}
+  variablesPath: 'azure_policy_lens/configurations/settings.yml'
+  ARM_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}
+  ARM_TENANT_ID: ${{ secrets.AZURE_TENANT_ID }}
+  ARM_SUBSCRIPTION_ID: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+  ARM_USE_OIDC: true
+jobs:
+  job_discovery:
+    name: Environment Discovery
+    runs-on: ubuntu-latest
+    steps:
+      - name: 'Checkout'
+        uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+
+      - name: 'Initiation'
+        uses: ./.github/actions/templates/initiation
+        with:
+          variablesPath: '${{ env.variablesPath }}'
+
+      - name: Azure Login via OIDC
+        id: azure_login
+        uses: azure/login@v2.1.0
+        with:
+          client-id: ${{ env.ARM_CLIENT_ID }}
+          tenant-id: ${{ env.ARM_TENANT_ID }}
+          subscription-id: ${{ env.ARM_SUBSCRIPTION_ID }}
+
+      - name: Discovery
+        uses: ./.github/actions/templates/policyDocDiscovery
+        with:
+          topLevelManagementGroupName: ${{ inputs.topLevelManagementGroupName }}
+          environment: ${{ inputs.environment }}
+          buildArtifactName: ${{ inputs.buildArtifactName }}
+
+  job_parse_config:
+    name: Parse Config
+    runs-on: ubuntu-latest
+    outputs:
+      wikiCount: ${{ steps.parse-config.outputs.wikiCount }}
+      wikis: ${{ steps.parse-config.outputs.wikis }}
+    needs:
+      - job_discovery
+    steps:
+      - id: checkout
+        uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+
+      - name: 'Initiation'
+        uses: ./.github/actions/templates/initiation
+        with:
+          variablesPath: '${{ env.variablesPath }}'
+
+      - id: parse-config
+        name: Parse Configuration
+        uses: ./.github/actions/templates/policyDocParseConfig
+        with:
+          environment: ${{ inputs.environment }}
+
+  job_generate_wiki:
+    name: 'Generate Wiki [${{ matrix.wiki.wikiAlias }}]'
+    runs-on: ubuntu-latest
+    needs:
+      - job_discovery
+      - job_parse_config
+    strategy:
+      matrix:
+        wiki: ${{ fromJSON(needs.job_parse_config.outputs.wikis) }}
+    env:
+      GithubUserId: ${{ github.actor }}
+      GithubToken: ${{ secrets.GITHUB_TOKEN }}
+    steps:
+      - name: 'Checkout'
+        uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+
+      - name: 'Initiation'
+        uses: ./.github/actions/templates/initiation
+        with:
+          variablesPath: '${{ env.variablesPath }}'
+
+      - name: Generate Wiki
+        uses: ./.github/actions/templates/policyDocGenerateWiki
+        with:
+          title: ${{ matrix.wiki.title }}
+          wikiAlias: ${{ matrix.wiki.wikiAlias }}
+          pageStyle: ${{ matrix.wiki.pageStyle }}
+          gitBranch: ${{ matrix.wiki.gitBranch }}
+          gitRepository: ${{ matrix.wiki.gitRepository }}
+          gitUserName: ${{ matrix.wiki.gitUserName }}
+          gitUserEmail: ${{ matrix.wiki.gitUserEmail }}
+          gitCommitMessage: 'Policy Documentation from commit ${{ github.sha }}'
+          subscriptionIds: ${{ matrix.wiki.subscriptionIds }}
+          childManagementGroupId: ${{ matrix.wiki.childManagementGroupId }}
+          buildArtifactName: ${{ inputs.buildArtifactName }}
+          githubUserId: ${{ env.GithubUserId }}
+          githubToken: ${{ env.GithubToken }}
